@@ -37,10 +37,10 @@ export interface Order {
   _id: string; orderNumber: string; createdAt: string;
   user?: { _id: string; name: string; email: string; phone: string } | string | null;
   customer: { name: string; email: string; phone: string };
-  address: { line1: string; line2: string; city: string; area: string; notes: string };
+  address: { line1: string; line2: string; city: string; area: string; state?: string; postalCode?: string; notes: string };
   items: { product: string; name: string; image: string; price: number; quantity: number }[];
   subtotal: number; deliveryFee: number; total: number; currency: string;
-  paymentMethod: 'cod' | 'razorpay'; paymentStatus: PaymentStatus;
+  paymentMethod: 'cod' | 'razorpay'; paymentStatus: PaymentStatus; razorpayOrderId?: string; razorpayPaymentId?: string;
   status: OrderStatus; statusHistory: { status: string; note: string; at: string }[];
 }
 

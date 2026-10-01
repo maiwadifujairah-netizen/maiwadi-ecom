@@ -14,10 +14,11 @@ import { ORDER_STATUSES, type Order, type Paged } from '../types';
 export default function AdminOrders() {
   const [params, setParams] = useSearchParams();
   const status = params.get('status') ?? '';
+  const payment = params.get('payment') ?? '';
   const page = Number(params.get('page')) || 1;
   const [search, setSearch] = useState('');
   const q = useDebounced(search);
-  const { data, loading, error, reload } = useFetch<Paged<Order>>(`/orders?page=${page}&status=${status}&search=${encodeURIComponent(q)}`);
+  const { data, loading, error, reload } = useFetch<Paged<Order>>(`/orders?page=${page}&status=${status}&paymentStatus=${payment}&search=${encodeURIComponent(q)}`);
   const { money } = useSite();
 
   const setParam = (k: string, v: string) => {
@@ -38,11 +39,20 @@ export default function AdminOrders() {
             </button>
           ))}
         </div>
-        <label className="relative lg:w-72">
+        <div className="flex gap-3">
+        <label className="shrink-0">
+          <span className="sr-only">Payment status</span>
+          <select className="input" value={payment} onChange={(e) => setParam('payment', e.target.value)}>
+            <option value="">All payments</option>
+            {['pending', 'paid', 'failed', 'refunded'].map((s) => <option key={s} value={s}>{s[0].toUpperCase() + s.slice(1)}</option>)}
+          </select>
+        </label>
+        <label className="relative flex-1 lg:w-72">
           <span className="sr-only">Search orders</span>
           <Search className="pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-slate-400" />
-          <input className="input pl-10" placeholder="Order #, name or phone…" value={search} onChange={(e) => { setSearch(e.target.value); setParam('page', ''); }} />
+          <input className="input pl-10" placeholder="Order #, name, email, phone, payment ID…" value={search} onChange={(e) => { setSearch(e.target.value); setParam('page', ''); }} />
         </label>
+        </div>
       </div>
       <div className="card overflow-hidden">
         {loading && !data ? <Loading /> : error ? <ErrorState message={error} onRetry={reload} />

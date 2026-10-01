@@ -90,7 +90,7 @@ export default function AdminOrderDetail() {
             <div className="card p-5">
               <h2 className="flex items-center gap-2 font-semibold"><MapPin className="size-4 text-ocean" /> Delivery address</h2>
               <address className="mt-3 text-sm leading-relaxed not-italic">
-                {a.line1}<br />{a.line2 && <>{a.line2}<br /></>}{a.area && `${a.area}, `}{a.city}
+                {a.line1}<br />{a.line2 && <>{a.line2}<br /></>}{a.area && `${a.area}, `}{a.city}{a.state && <><br />{a.state}{a.postalCode && ` ${a.postalCode}`}</>}
               </address>
               {a.notes && <p className="mt-3 rounded-lg bg-amber-50 p-3 text-sm text-amber-800">Note: {a.notes}</p>}
             </div>
@@ -110,8 +110,17 @@ export default function AdminOrderDetail() {
             <h2 className="font-semibold">Payment</h2>
             <p className="text-sm">{o.paymentMethod === 'cod' ? 'Cash on delivery' : 'Online (Razorpay)'}</p>
             <select className="input" value={o.paymentStatus} onChange={(e) => patch({ paymentStatus: e.target.value as PaymentStatus })} disabled={busy}>
-              {['pending', 'paid', 'failed', 'refunded'].map((s) => <option key={s} value={s}>{s[0].toUpperCase() + s.slice(1)}</option>)}
+              {['pending', 'paid', 'failed', 'refunded'].map((s) => (
+                // online orders become paid only through Razorpay verification
+                <option key={s} value={s} disabled={s === 'paid' && o.paymentMethod === 'razorpay' && !o.razorpayPaymentId}>{s[0].toUpperCase() + s.slice(1)}</option>
+              ))}
             </select>
+            {o.paymentMethod === 'razorpay' && (
+              <dl className="space-y-1 text-xs">
+                <div><dt className="inline text-muted">Razorpay order: </dt><dd className="inline font-mono break-all">{o.razorpayOrderId || '—'}</dd></div>
+                <div><dt className="inline text-muted">Payment ID: </dt><dd className="inline font-mono break-all">{o.razorpayPaymentId || 'not paid yet'}</dd></div>
+              </dl>
+            )}
           </div>
           <div className="card p-5">
             <h2 className="font-semibold">History</h2>

@@ -80,6 +80,8 @@ export const PAYMENT_STATUSES = ['pending', 'paid', 'failed', 'refunded'] as con
 const orderSchema = new Schema(
   {
     orderNumber: { type: String, required: true, unique: true },
+    // One order per checkout attempt: double-clicks, network retries and payment retries reuse it
+    checkoutId: { type: String, unique: true, sparse: true },
     user: { type: Schema.Types.ObjectId, ref: 'User', default: null, index: true },
     customer: {
       name: { type: String, required: true },
@@ -91,6 +93,8 @@ const orderSchema = new Schema(
       line2: { type: String, default: '' },
       city: { type: String, required: true },
       area: { type: String, default: '' },
+      state: { type: String, default: '' }, // emirate / state
+      postalCode: { type: String, default: '' },
       notes: { type: String, default: '' },
     },
     items: [
