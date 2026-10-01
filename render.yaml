@@ -1,0 +1,45 @@
+services:
+  - type: web
+    name: mai-wadi-api
+    runtime: node
+    rootDir: backend
+    buildCommand: npm ci --include=dev && npm run build
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NODE_VERSION
+        value: "20"
+      # mongodb-memory-server is a test-only devDependency; skip its ~77 MB binary download on every build
+      - key: MONGOMS_DISABLE_POSTINSTALL
+        value: "1"
+      # Vercel rewrite + Render proxy = 2 hops (so rate limiting sees the real client IP)
+      - key: TRUST_PROXY
+        value: "2"
+      - key: MONGODB_URI
+        sync: false
+      - key: MONGODB_DB
+        value: maiwadi
+      - key: JWT_SECRET
+        generateValue: true
+      # Your Vercel URLs, comma separated: https://<site>.vercel.app,https://<admin>.vercel.app
+      - key: CLIENT_URL
+        sync: false
+      - key: COOKIE_SAMESITE
+        value: lax
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false
+      # Only needed if you run `npm run seed:prod` on Render (the Atlas database is already seeded)
+      - key: ADMIN_EMAIL
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false
+      - key: RAZORPAY_KEY_ID
+        sync: false
+      - key: RAZORPAY_KEY_SECRET
+        sync: false

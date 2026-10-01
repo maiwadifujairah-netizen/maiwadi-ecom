@@ -1,0 +1,43 @@
+@import "tailwindcss";
+
+@theme {
+  --color-ocean: #078fc4;
+  --color-aqua: #12b8df;
+  --color-deep: #07558a;
+  --color-ink: #0b2540;
+  --color-mist: #f0f9fc;
+  --color-muted: #64748b;
+  --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Outfit", ui-sans-serif, system-ui, sans-serif;
+  --animate-fade-up: fade-up 0.7s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  --animate-float: float 6s ease-in-out infinite;
+  @keyframes fade-up { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
+  @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+}
+
+@layer base {
+  html { scroll-behavior: smooth; -webkit-tap-highlight-color: transparent; }
+  body { @apply bg-white font-sans text-ink antialiased; }
+  h1, h2, h3, h4 { @apply font-display tracking-tight; }
+  :focus-visible { @apply outline-2 outline-offset-2 outline-ocean; }
+}
+
+@utility container-x { @apply mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8; }
+@utility btn { @apply inline-flex items-center justify-center gap-2 rounded-full px-6 py-3 text-sm font-semibold transition duration-200 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer; }
+@utility btn-sm { @apply px-4 py-2 text-xs; }
+@utility btn-primary { @apply btn bg-ocean text-white shadow-lg shadow-ocean/25 hover:bg-deep hover:shadow-deep/25; }
+@utility btn-outline { @apply btn border border-ocean/30 bg-white text-deep hover:border-ocean hover:bg-mist; }
+@utility btn-ghost { @apply btn text-deep hover:bg-mist; }
+@utility btn-white { @apply btn bg-white text-deep shadow-lg hover:bg-mist; }
+@utility btn-danger { @apply btn bg-red-600 text-white hover:bg-red-700; }
+@utility input { @apply w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-ink placeholder:text-slate-400 transition focus:border-ocean focus:ring-4 focus:ring-ocean/10 focus:outline-none aria-[invalid=true]:border-red-400; }
+@utility label { @apply mb-1.5 block text-sm font-medium text-ink; }
+@utility field-error { @apply mt-1 text-xs text-red-600; }
+@utility card { @apply rounded-2xl border border-slate-100 bg-white shadow-sm; }
+@utility eyebrow { @apply inline-flex items-center gap-2 rounded-full bg-ocean/10 px-3 py-1 text-xs font-semibold tracking-wide text-deep uppercase; }
+@utility section-title { @apply font-display text-3xl font-bold text-ink sm:text-4xl; }
+@utility badge { @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+}
