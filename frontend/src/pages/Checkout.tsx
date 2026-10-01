@@ -11,10 +11,11 @@ import { Img, Spinner } from '../components/States';
 import { EMAIL_RE } from './Contact';
 import type { Order } from '../types';
 
-type Form = { name: string; email: string; phone: string; line1: string; line2: string; area: string; city: string; notes: string };
+type Form = { name: string; email: string; phone: string; line1: string; line2: string; area: string; city: string; state: string; postalCode: string; notes: string };
 type PaymentInit = { keyId: string; razorpayOrderId: string; amount: number; currency: string };
 
-declare global { interface Window { Razorpay?: new (opts: Record<string, unknown>) => { open: () => void } } }
+type RazorpayFailure = { error?: { description?: string } };
+declare global { interface Window { Razorpay?: new (opts: Record<string, unknown>) => { open: () => void; on: (event: 'payment.failed', cb: (r: RazorpayFailure) => void) => void } } }
 
 const loadRazorpay = () =>
   new Promise<boolean>((resolve) => {
@@ -34,10 +35,14 @@ export default function Checkout() {
   const navigate = useNavigate();
   const { data: payCfg } = useFetch<{ methods: ('cod' | 'razorpay')[] }>('/orders/payment-config');
   const [method, setMethod] = useState<'cod' | 'razorpay'>('cod');
-  const [form, setForm] = useState<Form>({ name: user?.name ?? '', email: user?.email ?? '', phone: user?.phone ?? '', line1: '', line2: '', area: '', city: '', notes: '' });
+  const [form, setForm] = useState<Form>({ name: user?.name ?? '', email: user?.email ?? '', phone: user?.phone ?? '', line1: '', line2: '', area: '', city: '', state: '', postalCode: '', notes: '' });
   const [errors, setErrors] = useState<Partial<Form>>({});
   const [busy, setBusy] = useState(false);
   const [serverError, setServerError] = useState('');
+  // One id per visit to checkout: re-submitting (double click, retry after a closed payment window,
+  // switching to cash on delivery) reuses the same order on the server instead of creating another.
+  const [checkoutId] = useState(() => crypto.randomUUID());
+  const [paymentPending, setPaymentPending] = useState(false);
 
   if (!items.length && !busy) return <Navigate to="/cart" replace />;
 
@@ -50,6 +55,8 @@ export default function Checkout() {
     if (!/^[+\d][\d\s-]{6,19}$/.test(form.phone.trim())) e.phone = 'Enter a valid phone number';
     if (form.line1.trim().length < 3) e.line1 = 'Enter your delivery address';
     if (form.city.trim().length < 2) e.city = 'Enter your city';
+    if (form.state.trim().length < 2) e.state = 'Enter your emirate / state';
+    if (form.postalCode.trim() && !/^[A-Za-z\d\s-]{3,12}$/.test(form.postalCode.trim())) e.postalCode = 'Enter a valid postal code';
     setErrors(e);
     return !Object.keys(e).length;
   }
@@ -66,15 +73,16 @@ export default function Checkout() {
     setServerError('');
     try {
       const { data } = await api.post<{ order: Order; payment: PaymentInit | null }>('/orders', {
+        checkoutId,
         customer: { name: form.name, email: form.email, phone: form.phone },
-        address: { line1: form.line1, line2: form.line2, area: form.area, city: form.city, notes: form.notes },
+        address: { line1: form.line1, line2: form.line2, area: form.area, city: form.city, state: form.state, postalCode: form.postalCode, notes: form.notes },
         items: items.map((i) => ({ productId: i.productId, quantity: i.quantity })),
         paymentMethod: method,
       });
       if (!data.payment) return done(data.order);
 
       if (!(await loadRazorpay()) || !window.Razorpay) throw new Error('Could not load the payment window. Please try again.');
-      new window.Razorpay({
+      const rzp = new window.Razorpay({
         key: data.payment.keyId,
         order_id: data.payment.razorpayOrderId,
         amount: data.payment.amount,
@@ -83,23 +91,28 @@ export default function Checkout() {
         description: `Order ${data.order.orderNumber}`,
         prefill: { name: form.name, email: form.email, contact: form.phone },
         theme: { color: '#078FC4' },
+        timeout: 900, // seconds; well inside the server's 30-minute stock hold
         handler: async (resp: Record<string, string>) => {
           try {
             const r = await api.post<{ order: Order }>(`/orders/${data.order._id}/verify-payment`, resp);
             done(r.data.order);
           } catch (err) {
-            setServerError(`${errorMessage(err)} Your order number is ${data.order.orderNumber} — please contact us.`);
+            setServerError(`${errorMessage(err)} Order ${data.order.orderNumber}.`);
+            setPaymentPending(true);
             setBusy(false);
           }
         },
         modal: {
           ondismiss: () => {
-            // ponytail: the unpaid order keeps its stock reserved until an admin cancels it; add an expiry job if this becomes common
-            setServerError(`Payment was not completed. Order ${data.order.orderNumber} is saved as unpaid — you can try again or choose cash on delivery.`);
+            setServerError(`Payment was not completed and you have not been charged. Try again, or choose cash on delivery to keep order ${data.order.orderNumber}.`);
+            setPaymentPending(true);
             setBusy(false);
           },
         },
-      }).open();
+      });
+      // Razorpay keeps its window open so the customer can retry with another method; show why it failed
+      rzp.on('payment.failed', (r) => setServerError(`Payment failed: ${r.error?.description || 'declined'}. You can retry in the payment window.`));
+      rzp.open();
     } catch (err) {
       setServerError(err instanceof Error && !('isAxiosError' in err) ? err.message : errorMessage(err));
       setBusy(false);
@@ -137,6 +150,8 @@ export default function Checkout() {
             <div className="sm:col-span-2">{input('line2', 'Apartment, floor, landmark (optional)', { autoComplete: 'address-line2' })}</div>
             {input('area', 'Area (optional)')}
             {input('city', 'City', { autoComplete: 'address-level2' })}
+            {input('state', 'Emirate / State', { autoComplete: 'address-level1' })}
+            {input('postalCode', 'Postal code (optional)', { autoComplete: 'postal-code', inputMode: 'text' })}
             <div className="sm:col-span-2">
               <label htmlFor="notes" className="label">Delivery notes (optional)</label>
               <textarea id="notes" rows={3} className="input" value={form.notes} onChange={set('notes')} placeholder="Preferred delivery time, gate code…" />
@@ -150,7 +165,7 @@ export default function Checkout() {
                 <label key={m} className={`flex cursor-pointer items-center gap-3 rounded-2xl border-2 p-4 transition ${method === m ? 'border-ocean bg-mist' : 'border-slate-100 hover:border-ocean/40'}`}>
                   <input type="radio" name="method" className="accent-ocean" checked={method === m} onChange={() => setMethod(m)} />
                   {m === 'cod' ? <Banknote className="size-5 text-ocean" /> : <CreditCard className="size-5 text-ocean" />}
-                  <span className="text-sm font-semibold">{m === 'cod' ? 'Cash on delivery' : 'Pay online (card)'}</span>
+                  <span className="text-sm font-semibold">{m === 'cod' ? 'Cash on delivery' : 'Pay online (Razorpay)'}</span>
                 </label>
               ))}
             </div>
@@ -175,7 +190,8 @@ export default function Checkout() {
           </dl>
           {serverError && <p className="mt-4 rounded-xl bg-red-50 p-3 text-sm text-red-700" role="alert">{serverError}</p>}
           <button type="submit" className="btn-primary mt-6 w-full py-4" disabled={busy}>
-            {busy ? <><Spinner className="size-4" /> Placing order…</> : <><Lock className="size-4" /> Place order</>}
+            {busy ? <><Spinner className="size-4" /> {method === 'razorpay' ? 'Processing payment…' : 'Placing order…'}</>
+              : <><Lock className="size-4" /> {method === 'razorpay' ? (paymentPending ? 'Retry payment' : 'Pay now') : 'Place order'}</>}
           </button>
           <p className="mt-3 text-center text-xs text-muted">Final prices and stock are confirmed when you place the order.</p>
         </aside>

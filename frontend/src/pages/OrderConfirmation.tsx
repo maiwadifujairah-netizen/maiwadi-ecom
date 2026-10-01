@@ -25,9 +25,9 @@ export default function OrderConfirmation() {
           <dl className="mt-4 space-y-1 border-t border-slate-100 pt-4 text-sm">
             <div className="flex justify-between"><dt className="text-muted">Delivery</dt><dd>{order.deliveryFee > 0 ? money(order.deliveryFee) : 'Free'}</dd></div>
             <div className="flex justify-between text-base font-semibold"><dt>Total</dt><dd>{money(order.total)}</dd></div>
-            <div className="flex justify-between"><dt className="text-muted">Payment</dt><dd>{order.paymentMethod === 'cod' ? 'Cash on delivery' : `Online — ${order.paymentStatus}`}</dd></div>
+            <div className="flex justify-between"><dt className="text-muted">Payment</dt><dd>{order.paymentMethod === 'cod' ? 'Cash on delivery' : order.paymentStatus === 'paid' ? 'Paid online' : `Online — ${order.paymentStatus}`}</dd></div>
           </dl>
-          <p className="mt-4 text-sm text-muted">Delivering to: {order.address.line1}{order.address.line2 && `, ${order.address.line2}`}, {order.address.area && `${order.address.area}, `}{order.address.city}</p>
+          <p className="mt-4 text-sm text-muted">Delivering to: {order.address.line1}{order.address.line2 && `, ${order.address.line2}`}, {order.address.area && `${order.address.area}, `}{order.address.city}{order.address.state && `, ${order.address.state}`}{order.address.postalCode && ` ${order.address.postalCode}`}</p>
         </div>
       )}
       {settings.mobile && <p className="mt-6 text-sm text-muted">Questions? Call us on <a className="font-semibold text-ocean" href={`tel:${settings.mobile.replace(/\s/g, '')}`}>{settings.mobile}</a></p>}

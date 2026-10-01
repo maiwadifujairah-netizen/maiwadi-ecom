@@ -34,6 +34,9 @@ export default function HeroBanner({ banner, loading }: { banner: Banner | null;
   const subtitle = useFallback && !banner
     ? s.heroSubtitle || 'MAI WADI purified drinking water in convenient water cans — order online and we bring it straight to your home or office.'
     : banner!.subtitle;
+  // "Pure drinking water, delivered to your door" → white lead line + aqua accent line (split at the first comma)
+  const comma = title.indexOf(',');
+  const [titleLead, titleAccent] = comma > 0 ? [title.slice(0, comma + 1), title.slice(comma + 1).trim()] : [title, ''];
   const showTitle = banner ? banner.showTitle !== false : true;
   const showSubtitle = (banner ? banner.showSubtitle !== false : true) && Boolean(subtitle);
   const buttons = banner
@@ -67,21 +70,22 @@ export default function HeroBanner({ banner, loading }: { banner: Banner | null;
           className="absolute inset-0 -z-10 size-full object-cover object-[var(--pos-m)] lg:object-[var(--pos-d)]"
         />
       </picture>
+      {/* Dark scrim for legibility: top-down on mobile (text spans the width), left-to-right on desktop so the
+          bottles and landscape on the right keep their full brightness. */}
+      <div aria-hidden="true" className="absolute inset-0 -z-10 bg-[linear-gradient(180deg,rgb(0_0_0/0.65)_0%,rgb(0_0_0/0.4)_45%,transparent_75%)] lg:bg-[linear-gradient(90deg,rgb(0_0_0/0.72)_0%,rgb(0_0_0/0.5)_28%,rgb(0_0_0/0.15)_50%,transparent_65%)]" />
 
       <div className="container-x flex h-full items-start pt-8 sm:pt-12 lg:pt-[3.6vw]">
-        {/* Desktop: top-left, inside the free ~38% of the artwork left of the bottles (measured cleanest band: sky/dunes).
-            Readability comes from type colour + a thin edge shadow (white on the darker mobile art, navy with a crisp
-            light halo on desktop) — no overlay. */}
-        <div className="max-w-xl animate-fade-up text-white lg:text-ink lg:max-w-[calc(38vw-max((100vw-80rem)/2,0px)-3.5rem)]">
+        {/* Desktop: top-left, inside the free ~38% of the artwork left of the bottles. */}
+        <div className="max-w-xl animate-fade-up text-white lg:max-w-[calc(38vw-max((100vw-80rem)/2,0px)-3.5rem)]">
           {showTitle
-            ? <h1 className="text-[2rem] leading-[1.1] font-extrabold tracking-tight [text-shadow:0_1px_3px_rgb(0_0_0/0.5)] lg:[text-shadow:0_0_1px_rgb(255_255_255/0.9),0_0_4px_rgb(255_255_255/0.75)] sm:text-5xl lg:text-[clamp(2rem,2.7vw,3.25rem)]">{title}</h1>
+            ? <h1 className="text-[2rem] leading-[1.1] font-extrabold tracking-tight text-white [text-shadow:0_2px_12px_rgb(0_0_0/0.35)] sm:text-5xl lg:text-[clamp(2rem,2.9vw,3.5rem)]">{titleLead}{titleAccent && <><br /><span className="text-[#22D3EE]">{titleAccent}</span></>}</h1>
             : <h1 className="sr-only">{title}</h1>}
-          {showSubtitle && <p className="mt-3 text-[15px] leading-[1.6] font-semibold [text-shadow:0_1px_3px_rgb(0_0_0/0.5)] lg:[text-shadow:0_0_1px_rgb(255_255_255/0.9),0_0_4px_rgb(255_255_255/0.75)] sm:mt-5 sm:text-lg xl:text-xl">{subtitle}</p>}
+          {showSubtitle && <p className="mt-3 max-w-md text-[15px] leading-[1.6] font-medium text-white [text-shadow:0_1px_8px_rgb(0_0_0/0.35)] sm:mt-5 sm:text-lg xl:max-w-lg xl:text-xl">{subtitle}</p>}
           {buttons.length > 0 && (
             <div className="mt-5 flex flex-wrap gap-3 sm:mt-8">
               {buttons.map((b) => (
-                <CtaLink key={b.text} to={b.to} className={b.primary ? 'btn-primary px-7 py-3.5 text-base' : 'btn border border-ink/20 bg-white/70 px-7 py-3.5 text-base text-ink backdrop-blur-sm hover:bg-white'}>
-                  {b.text} {b.primary && <ArrowRight className="size-4" />}
+                <CtaLink key={b.text} to={b.to} className={b.primary ? 'btn group rounded-xl bg-[#0EA5E9] px-7 py-3.5 text-base text-white shadow-lg shadow-sky-950/30 hover:bg-[#0284C7] hover:shadow-xl' : 'btn border border-ink/20 bg-white/70 px-7 py-3.5 text-base text-ink backdrop-blur-sm hover:bg-white'}>
+                  {b.text} {b.primary && <ArrowRight className="size-4 transition-transform duration-200 group-hover:translate-x-0.5" />}
                 </CtaLink>
               ))}
             </div>
