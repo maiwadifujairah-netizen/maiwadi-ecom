@@ -23,7 +23,7 @@ services:
         value: maiwadi
       - key: JWT_SECRET
         generateValue: true
-      # Your Vercel URLs, comma separated: https://<site>.vercel.app,https://<admin>.vercel.app
+      # Website + admin origins, comma separated: https://maiwadi-ecom.vercel.app,https://maiwadi-ecom-tgdb.vercel.app
       - key: CLIENT_URL
         sync: false
       - key: COOKIE_SAMESITE

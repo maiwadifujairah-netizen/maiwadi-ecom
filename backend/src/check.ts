@@ -26,7 +26,7 @@ const isProd = e.NODE_ENV === 'production';
 for (const k of ['MONGODB_URI', 'JWT_SECRET']) (e[k] ? pass : fail)(`${k} is set`);
 if (e.JWT_SECRET) (e.JWT_SECRET.length >= 32 && e.JWT_SECRET !== 'change-me' ? pass : fail)('JWT_SECRET is strong (>= 32 chars)', `${e.JWT_SECRET.length} chars`);
 (e.ADMIN_EMAIL && (e.ADMIN_PASSWORD?.length ?? 0) >= 10 ? pass : fail)('ADMIN_EMAIL / ADMIN_PASSWORD usable by seed (password >= 10 chars)');
-const origins = (e.CLIENT_URL || 'http://localhost:5173,http://localhost:5174').split(',').map((s) => s.trim());
+const origins = (e.CLIENT_URL || 'http://localhost:5173,http://localhost:5174').split(',').map((s) => s.trim().replace(/\/+$/, '')).filter(Boolean);
 if (isProd) (origins.every((o) => o.startsWith('https://')) ? pass : fail)('CLIENT_URL uses https origins in production', origins.join(', '));
 else pass('CLIENT_URL (CORS origins)', origins.join(', '));
 (['lax', 'none', undefined, ''].includes(e.COOKIE_SAMESITE) ? pass : fail)('COOKIE_SAMESITE valid', e.COOKIE_SAMESITE || 'lax (default)');

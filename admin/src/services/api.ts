@@ -1,7 +1,10 @@
 import axios from 'axios';
 
 /** Backend base URL, e.g. http://localhost:5000/api — or "/api" when a host rewrite proxies it (see README). */
-export const API_URL: string = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? 'http://localhost:5000/api' : '/api');
+// Always ends in /api: routes are mounted under /api, so a bare origin (https://x.onrender.com) would 404
+export const API_URL: string = (import.meta.env.VITE_API_URL || (import.meta.env.DEV ? 'http://localhost:5000/api' : '/api'))
+  .replace(/\/+$/, '')
+  .replace(/(\/api)?$/, '/api');
 /** Customer website, for "View website" links. */
 export const SITE_URL: string = import.meta.env.VITE_SITE_URL || 'http://localhost:5173';
 

@@ -109,8 +109,8 @@ Each app also runs on its own: `cd frontend && npm install && npm run dev` (same
    - `render.yaml` sets `MONGOMS_DISABLE_POSTINSTALL=1` (skips a 77 MB test-only MongoDB download), `NODE_VERSION=20` and `TRUST_PROXY=2`.
    - In Atlas → Network Access, allow Render's outbound IPs (or `0.0.0.0/0`).
    - Check that `/api/health` returns `{"ok":true}`.
-4. **Frontend on Vercel:** set the root directory to `frontend`, set `VITE_API_URL=/api`, and replace `YOUR-BACKEND.onrender.com` in `frontend/vercel.json`.
-5. **Admin on Vercel:** set the root directory to `admin`, set `VITE_API_URL=/api` and `VITE_SITE_URL=https://<your website>` (required, otherwise "View website" points to localhost), and replace `YOUR-BACKEND.onrender.com` in `admin/vercel.json`.
+4. **Frontend on Vercel:** set the root directory to `frontend`, set `VITE_API_URL=/api`. `frontend/vercel.json` rewrites to `https://maiwadi-ecom.onrender.com` (change it if the Render URL changes).
+5. **Admin on Vercel:** set the root directory to `admin`, set `VITE_API_URL=/api` and `VITE_SITE_URL=https://<your website>` (required, otherwise "View website" points to localhost). `admin/vercel.json` rewrites to `https://maiwadi-ecom.onrender.com`.
 6. **Go-live check:** run `NODE_ENV=production npm run check` with the production values. It fails on non-https `CLIENT_URL` and on Razorpay test keys.
 
 Both `vercel.json` files add security headers (nosniff, referrer policy, frame protection) and long-term caching for `/assets`. The admin also sends `X-Robots-Tag: noindex` and refuses to be framed.

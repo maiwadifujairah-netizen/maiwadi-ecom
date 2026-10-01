@@ -4,15 +4,15 @@
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "https://YOUR-BACKEND.onrender.com/api/:path*"
+      "destination": "https://maiwadi-ecom.onrender.com/api/:path*"
     },
     {
       "source": "/uploads/:path*",
-      "destination": "https://YOUR-BACKEND.onrender.com/uploads/:path*"
+      "destination": "https://maiwadi-ecom.onrender.com/uploads/:path*"
     },
     {
       "source": "/static/:path*",
-      "destination": "https://YOUR-BACKEND.onrender.com/static/:path*"
+      "destination": "https://maiwadi-ecom.onrender.com/static/:path*"
     },
     {
       "source": "/((?!api/|uploads/|static/).*)",

@@ -13,8 +13,8 @@ export const env = {
   // Database inside the cluster; without it an Atlas URI with no /path silently uses "test"
   mongoDb: process.env.MONGODB_DB || 'maiwadi',
   jwtSecret: required('JWT_SECRET'),
-  // Frontend + admin origins allowed by CORS
-  clientUrls: (process.env.CLIENT_URL || 'http://localhost:5173,http://localhost:5174').split(',').map((s) => s.trim()).filter(Boolean),
+  // Frontend + admin origins allowed by CORS (trailing slashes stripped: browsers send origins without one)
+  clientUrls: (process.env.CLIENT_URL || 'http://localhost:5173,http://localhost:5174').split(',').map((s) => s.trim().replace(/\/+$/, '')).filter(Boolean),
   // 'lax' when apps reach the API same-site (dev on localhost, or via a /api rewrite); 'none' for cross-site API calls
   cookieSameSite: (process.env.COOKIE_SAMESITE === 'none' ? 'none' : 'lax') as 'lax' | 'none',
   cloudinary: {

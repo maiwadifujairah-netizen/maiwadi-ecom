@@ -26,6 +26,8 @@ export function createApp() {
   app.use(express.json({ limit: '200kb' }));
   app.use(cookieParser());
 
+  // Root of the API host: everything lives under /api, so point visitors there instead of a bare 404
+  app.get('/', (_req, res) => res.json({ ok: true, service: 'mai-wadi-api', health: '/api/health' }));
   // 200 only when the database is connected, so Render's health check catches a lost DB connection.
   app.get('/api/health', (_req, res) => {
     const db = mongoose.connection.readyState === 1 ? 'connected' : 'disconnected';
