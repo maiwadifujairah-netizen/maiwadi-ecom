@@ -79,7 +79,7 @@ Each app also runs on its own: `cd frontend && npm install && npm run dev` (same
 
 | Variable | App | Notes |
 |---|---|---|
-| `VITE_API_URL` | both | e.g. `http://localhost:5000/api`, or `/api` behind a Vercel rewrite |
+| `VITE_API_URL` | both | dev only, e.g. `http://localhost:5000/api`. Production builds always use same-origin `/api` (Vercel rewrite) |
 | `VITE_SITE_URL` | admin | customer website URL for "View website" links (default `http://localhost:5173`) |
 
 ## How the apps share the backend
@@ -109,13 +109,13 @@ Each app also runs on its own: `cd frontend && npm install && npm run dev` (same
    - `render.yaml` sets `MONGOMS_DISABLE_POSTINSTALL=1` (skips a 77 MB test-only MongoDB download), `NODE_VERSION=20` and `TRUST_PROXY=2`.
    - In Atlas → Network Access, allow Render's outbound IPs (or `0.0.0.0/0`).
    - Check that `/api/health` returns `{"ok":true}`.
-4. **Frontend on Vercel:** set the root directory to `frontend`, set `VITE_API_URL=/api`. `frontend/vercel.json` rewrites to `https://maiwadi-ecom.onrender.com` (change it if the Render URL changes).
-5. **Admin on Vercel:** set the root directory to `admin`, set `VITE_API_URL=/api` and `VITE_SITE_URL=https://<your website>` (required, otherwise "View website" points to localhost). `admin/vercel.json` rewrites to `https://maiwadi-ecom.onrender.com`.
+4. **Frontend on Vercel:** set the root directory to `frontend`. `frontend/vercel.json` rewrites to `https://maiwadi-ecom.onrender.com` (change it if the Render URL changes).
+5. **Admin on Vercel:** set the root directory to `admin`, set `VITE_SITE_URL=https://<your website>` (required, otherwise "View website" points to localhost). `admin/vercel.json` rewrites to `https://maiwadi-ecom.onrender.com`.
 6. **Go-live check:** run `NODE_ENV=production npm run check` with the production values. It fails on non-https `CLIENT_URL` and on Razorpay test keys.
 
 Both `vercel.json` files add security headers (nosniff, referrer policy, frame protection) and long-term caching for `/assets`. The admin also sends `X-Robots-Tag: noindex` and refuses to be framed.
 
-**Alternative (no rewrites):** point `VITE_API_URL` straight at `https://<api>/api` and set `COOKIE_SAMESITE=none` on the backend. The login cookies are then third-party, which Safari and privacy-focused browsers may block. Use this only if the API shares a parent domain with the apps, e.g. `api.maiwadi.com` alongside `maiwadi.com` / `admin.maiwadi.com`.
+Production builds always call `/api` on their own origin; there is no direct-to-Render mode, because the `SameSite=Lax` login cookie would not be sent cross-site.
 
 ### Payments
 `RAZORPAY_*` keys enable "Pay online". The server creates the Razorpay order and verifies the payment signature before marking an order paid (`backend/src/services/payment.ts`). Razorpay mainly serves Indian-registered merchants, so for a UAE business a local gateway (e.g. Stripe, Telr, Network International) may fit better. Unpaid online orders keep their stock reserved until an admin cancels them.

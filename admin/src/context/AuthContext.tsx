@@ -22,6 +22,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .finally(() => setLoading(false));
   }, []);
 
+  // The server is the source of truth: a 401 means the session is gone (expired, logged out elsewhere,
+  // cookie not sent), so drop the user and let AdminLayout redirect to /login. Login's own 401 is a form error.
+  useEffect(() => {
+    const id = api.interceptors.response.use(undefined, (err) => {
+      if (err.response?.status === 401 && err.config?.url !== '/auth/login') setUser(null);
+      return Promise.reject(err);
+    });
+    return () => api.interceptors.response.eject(id);
+  }, []);
+
   const login = useCallback(async (email: string, password: string) => {
     const { data } = await api.post<{ user: User }>('/auth/login', { email, password });
     setUser(data.user);

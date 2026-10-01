@@ -1,10 +1,13 @@
 import axios from 'axios';
 
-/** Backend base URL, e.g. http://localhost:5000/api — or "/api" when a host rewrite proxies it (see README). */
-// Always ends in /api: routes are mounted under /api, so a bare origin (https://x.onrender.com) would 404
-export const API_URL: string = (import.meta.env.VITE_API_URL || (import.meta.env.DEV ? 'http://localhost:5000/api' : '/api'))
-  .replace(/\/+$/, '')
-  .replace(/(\/api)?$/, '/api');
+/**
+ * Backend base URL. Production always uses same-origin "/api": vercel.json proxies it to Render, so the
+ * SameSite=Lax auth cookie is first-party. A cross-site URL (https://x.onrender.com) would log in, then get
+ * 401 on every request because the browser never sends the cookie back. VITE_API_URL applies in dev only.
+ */
+export const API_URL: string = import.meta.env.DEV
+  ? (import.meta.env.VITE_API_URL || 'http://localhost:5000/api').replace(/\/+$/, '').replace(/(\/api)?$/, '/api')
+  : '/api';
 const API_ORIGIN = API_URL.replace(/\/api\/?$/, '');
 
 export const api = axios.create({ baseURL: API_URL, withCredentials: true });
