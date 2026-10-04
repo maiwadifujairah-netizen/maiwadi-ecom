@@ -1,12 +1,13 @@
 @import "tailwindcss";
 
 @theme {
-  --color-ocean: #078fc4;
-  --color-aqua: #12b8df;
-  --color-deep: #07558a;
-  --color-ink: #0b2540;
-  --color-mist: #f0f9fc;
-  --color-muted: #64748b;
+  --color-ocean: #0b84d8;
+  --color-aqua: #23a9ee;
+  --color-deep: #0a5fb0;
+  --color-ink: #0b1e47;
+  --color-navy: #081a3d;
+  --color-mist: #eef6fd;
+  --color-muted: #5b6b85;
   --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
   --font-display: "Outfit", ui-sans-serif, system-ui, sans-serif;
   --animate-fade-up: fade-up 0.7s cubic-bezier(0.2, 0.7, 0.2, 1) both;
@@ -18,24 +19,29 @@
 @layer base {
   html { scroll-behavior: smooth; -webkit-tap-highlight-color: transparent; }
   body { @apply bg-white font-sans text-ink antialiased; }
-  h1, h2, h3, h4 { @apply font-display tracking-tight; }
+  h1, h2, h3, h4 { @apply font-display tracking-tight text-ink; }
   :focus-visible { @apply outline-2 outline-offset-2 outline-ocean; }
 }
 
 @utility container-x { @apply mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8; }
-@utility btn { @apply inline-flex items-center justify-center gap-2 rounded-full px-6 py-3 text-sm font-semibold transition duration-200 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer; }
-@utility btn-sm { @apply px-4 py-2 text-xs; }
-@utility btn-primary { @apply btn bg-ocean text-white shadow-lg shadow-ocean/25 hover:bg-deep hover:shadow-deep/25; }
-@utility btn-outline { @apply btn border border-ocean/30 bg-white text-deep hover:border-ocean hover:bg-mist; }
+@utility section-y { @apply py-16 sm:py-20 lg:py-24; }
+@utility btn { @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-full px-6 py-3 text-sm font-semibold transition duration-200 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer; }
+@utility btn-sm { @apply min-h-9 px-4 py-2 text-xs; }
+@utility btn-primary { @apply btn bg-ocean text-white shadow-sm hover:bg-deep; }
+@utility btn-outline { @apply btn border border-ocean/25 bg-white text-deep hover:border-ocean hover:bg-mist; }
 @utility btn-ghost { @apply btn text-deep hover:bg-mist; }
 @utility btn-white { @apply btn bg-white text-deep shadow-lg hover:bg-mist; }
 @utility btn-danger { @apply btn bg-red-600 text-white hover:bg-red-700; }
 @utility input { @apply w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-ink placeholder:text-slate-400 transition focus:border-ocean focus:ring-4 focus:ring-ocean/10 focus:outline-none aria-[invalid=true]:border-red-400; }
 @utility label { @apply mb-1.5 block text-sm font-medium text-ink; }
 @utility field-error { @apply mt-1 text-xs text-red-600; }
-@utility card { @apply rounded-2xl border border-slate-100 bg-white shadow-sm; }
-@utility eyebrow { @apply inline-flex items-center gap-2 rounded-full bg-ocean/10 px-3 py-1 text-xs font-semibold tracking-wide text-deep uppercase; }
-@utility section-title { @apply font-display text-3xl font-bold text-ink sm:text-4xl; }
+@utility card { @apply rounded-2xl border border-slate-200/70 bg-white shadow-[0_1px_2px_rgb(11_30_71/0.04),0_8px_24px_-18px_rgb(11_30_71/0.18)]; }
+@utility eyebrow { @apply inline-block text-xs font-bold tracking-[0.14em] text-ocean uppercase; }
+@utility section-title { @apply font-display text-[1.75rem] leading-tight font-bold text-ink sm:text-3xl lg:text-4xl; }
+@utility icon-tile { @apply grid size-12 shrink-0 place-items-center rounded-xl bg-mist text-ocean; }
+/* Product/can image frame: any uploaded image (transparent or white background) sits on the same light panel. */
+@utility media-panel { @apply relative overflow-hidden rounded-2xl bg-[linear-gradient(180deg,#ffffff_0%,#eaf4fc_100%)] ring-1 ring-ocean/10; }
+@utility product-img { @apply size-full object-contain object-center mix-blend-multiply; }
 @utility badge { @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold; }
 
 @media (prefers-reduced-motion: reduce) {

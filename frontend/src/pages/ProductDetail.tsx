@@ -42,9 +42,8 @@ export default function ProductDetail() {
 
       <div className="grid gap-10 lg:grid-cols-2 lg:gap-16">
         <div>
-          <div className="relative overflow-hidden rounded-[2rem] bg-gradient-to-br from-mist via-white to-mist">
-            <div className="pointer-events-none absolute inset-0 m-auto size-72 rounded-full bg-aqua/15 blur-3xl" />
-            <Img src={images[active]} alt={p.name} eager className="relative mx-auto aspect-square w-full object-contain p-8 mix-blend-multiply" />
+          <div className="media-panel aspect-square">
+            <Img src={images[active]} alt={p.name} eager className="product-img p-8 sm:p-12" />
           </div>
           {images.length > 1 && (
             <div className="mt-4 flex gap-3 overflow-x-auto pb-1">
@@ -63,7 +62,7 @@ export default function ProductDetail() {
             {p.category && <Link to={`/products?category=${p.category._id}`} className="text-xs font-bold tracking-wider text-ocean uppercase">{p.category.name}</Link>}
             <StockBadge stock={p.stock} price={p.price} />
           </div>
-          <h1 className="text-4xl font-bold sm:text-5xl">{p.name}</h1>
+          <h1 className="text-3xl font-bold sm:text-4xl">{p.name}</h1>
           {p.shortDescription && <p className="text-lg text-muted">{p.shortDescription}</p>}
           <p className="font-display text-4xl font-bold text-deep">{p.price > 0 ? money(p.price) : 'Contact us for pricing'}</p>
           {p.price > 0 && <p className="text-sm text-muted">{p.stock > 0 ? `${p.stock} available` : 'Currently out of stock'}</p>}

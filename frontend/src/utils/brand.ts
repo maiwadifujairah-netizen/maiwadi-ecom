@@ -17,3 +17,11 @@ export const CUSTOMERS = [
   { name: 'Sahara Emirates', logo: '/images/customers/sahara-emirates.webp', width: 400, height: 336 },
   { name: 'Al Hilal Business Tower', logo: '/images/customers/al-hilal.webp', width: 304, height: 492 },
 ];
+
+/** The real MAI WADI water can (transparent background). Product photos themselves are managed in Admin → Products. */
+export const CAN_IMAGE = '/images/water-can.webp';
+
+/** Official contact number; overrides Admin → Settings phone/mobile/WhatsApp everywhere on the site. */
+export const OFFICIAL_PHONE = '+971 50 383 9976';
+export const OFFICIAL_WHATSAPP = '971503839976';
+

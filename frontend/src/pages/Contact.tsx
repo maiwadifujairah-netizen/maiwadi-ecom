@@ -6,7 +6,7 @@ import { api, errorMessage } from '../services/api';
 import PageHeader from '../components/PageHeader';
 import { WhatsAppIcon } from '../components/icons';
 import { Spinner } from '../components/States';
-import { telHref, waHref } from '../utils/format';
+import { WA_ENQUIRY, telHref, waHref } from '../utils/format';
 
 type Form = { name: string; email: string; phone: string; message: string };
 const EMPTY: Form = { name: '', email: '', phone: '', message: '' };
@@ -50,11 +50,12 @@ export default function Contact() {
 
   const details = [
     s.phone && { icon: Phone, label: 'Phone', value: s.phone, href: telHref(s.phone) },
-    s.mobile && { icon: Phone, label: 'Mobile', value: s.mobile, href: telHref(s.mobile) },
+    s.mobile && { icon: Phone, label: 'Phone', value: s.mobile, href: telHref(s.mobile) },
+    s.whatsapp && { icon: WhatsAppIcon, label: 'WhatsApp', value: 'Chat with our team', href: waHref(s.whatsapp, WA_ENQUIRY), external: true },
     s.email && { icon: Mail, label: 'Email', value: s.email, href: `mailto:${s.email}` },
-    s.address && { icon: MapPin, label: 'Address', value: s.address },
+    { icon: MapPin, label: 'Our location', value: s.address || 'Fujairah, UAE' },
     s.workingHours && { icon: Clock, label: 'Working hours', value: s.workingHours },
-  ].filter(Boolean) as { icon: typeof Phone; label: string; value: string; href?: string }[];
+  ].filter(Boolean) as { icon: typeof Phone; label: string; value: string; href?: string; external?: boolean }[];
 
   const field = (k: keyof Form, label: string, props: Record<string, unknown> = {}) => (
     <div>
@@ -66,26 +67,35 @@ export default function Contact() {
 
   return (
     <>
-      <PageHeader eyebrow="Contact" title="Let's get your water delivered" text="Questions, delivery requests or office supply — send us a message and our team will get back to you." />
-      <section className="container-x grid gap-10 pb-20 lg:grid-cols-[1fr_1.4fr]">
-        <aside className="space-y-4">
-          {details.map((d) => (
-            <div key={d.label} className="flex items-start gap-4 rounded-2xl bg-mist p-5">
-              <div className="grid size-11 shrink-0 place-items-center rounded-xl bg-white text-ocean shadow-sm"><d.icon className="size-5" /></div>
-              <div>
-                <p className="text-xs font-semibold tracking-wider text-muted uppercase">{d.label}</p>
-                {d.href ? <a href={d.href} className="font-semibold text-deep hover:text-ocean">{d.value}</a> : <p className="font-semibold text-deep">{d.value}</p>}
-              </div>
-            </div>
-          ))}
-          {s.whatsapp && (
-            <a href={waHref(s.whatsapp, 'Hello MAI WADI, I have an inquiry.')} target="_blank" rel="noopener" className="btn w-full bg-[#25D366] py-4 text-white hover:bg-[#1eb458]">
-              <WhatsAppIcon /> Chat with us on WhatsApp
-            </a>
-          )}
-        </aside>
+      <PageHeader crumb="Contact" eyebrow="Get in touch" title="Contact us" text="Order online, call us or send a message. Our team is ready to assist you with your water delivery needs." />
+      <section className="container-x grid gap-8 pt-10 pb-16 sm:pb-20 lg:grid-cols-[1fr_1.2fr] lg:gap-12">
+        <div>
+          <h2 className="text-2xl font-bold sm:text-3xl">We're here to help</h2>
+          <p className="mt-3 mb-6 max-w-md text-muted">Call, message us on WhatsApp or send the form — our team will get back to you shortly.</p>
+        <ul className="grid content-start gap-3 sm:grid-cols-2 lg:grid-cols-1">
+          {details.map((d) => {
+            const body = (
+              <>
+                <span className="icon-tile"><d.icon className="size-5" /></span>
+                <span>
+                  <span className="block text-sm font-bold text-ink">{d.label}</span>
+                  <span className="block text-sm text-muted">{d.value}</span>
+                </span>
+              </>
+            );
+            const cls = 'card flex items-center gap-4 p-4 transition';
+            return (
+              <li key={d.label}>
+                {d.href
+                  ? <a href={d.href} {...(d.external && { target: '_blank', rel: 'noopener noreferrer' })} className={`${cls} hover:-translate-y-0.5 hover:border-ocean/30 hover:shadow-lg hover:shadow-ocean/10`}>{body}</a>
+                  : <div className={cls}>{body}</div>}
+              </li>
+            );
+          })}
+        </ul>
+        </div>
 
-        <div className="card p-6 sm:p-10">
+        <div className="card p-6 sm:p-8">
           {state === 'sent' ? (
             <div className="flex flex-col items-center py-12 text-center" role="status">
               <CheckCircle2 className="size-14 text-emerald-500" />
@@ -94,23 +104,24 @@ export default function Contact() {
               <button className="btn-outline mt-6" onClick={() => setState('idle')}>Send another message</button>
             </div>
           ) : (
-            <form onSubmit={submit} noValidate className="grid gap-5 sm:grid-cols-2">
-              <h2 className="text-2xl font-bold sm:col-span-2">Send us a message</h2>
-              <div className="sm:col-span-2">{field('name', 'Full name', { autoComplete: 'name' })}</div>
-              {field('email', 'Email', { type: 'email', autoComplete: 'email' })}
-              {field('phone', 'Phone number (optional)', { type: 'tel', autoComplete: 'tel' })}
-              <div className="sm:col-span-2">
+            <form onSubmit={submit} noValidate className="grid gap-5">
+              <h2 className="text-2xl font-bold">Send us a message</h2>
+              {field('name', 'Name', { autoComplete: 'name', placeholder: 'Your name' })}
+              {field('email', 'Email', { type: 'email', autoComplete: 'email', placeholder: 'you@example.com' })}
+              {field('phone', 'Phone (optional)', { type: 'tel', autoComplete: 'tel', placeholder: 'Your phone number' })}
+              <div>
                 <label htmlFor="message" className="label">Message</label>
-                <textarea id="message" rows={5} className="input resize-y" value={form.message} onChange={set('message')} aria-invalid={Boolean(errors.message)} placeholder="Tell us how many cans you need, your area, and preferred delivery time…" />
+                <textarea id="message" rows={5} className="input resize-y" value={form.message} onChange={set('message')} aria-invalid={Boolean(errors.message)} placeholder="How many cans you need, your area and preferred delivery time…" />
                 {errors.message && <p className="field-error">{errors.message}</p>}
               </div>
-              {serverError && <p className="rounded-xl bg-red-50 p-3 text-sm text-red-700 sm:col-span-2" role="alert">{serverError}</p>}
-              <button type="submit" className="btn-primary sm:col-span-2" disabled={state === 'sending'}>
-                {state === 'sending' ? <><Spinner className="size-4" /> Sending…</> : <><Send className="size-4" /> Send message</>}
+              {serverError && <p className="rounded-xl bg-red-50 p-3 text-sm text-red-700" role="alert">{serverError}</p>}
+              <button type="submit" className="btn-primary" disabled={state === 'sending'}>
+                {state === 'sending' ? <><Spinner className="size-4" /> Sending…</> : <>Send message <Send className="size-4" /></>}
               </button>
             </form>
           )}
         </div>
+
       </section>
     </>
   );

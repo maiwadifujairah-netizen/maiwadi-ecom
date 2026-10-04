@@ -93,7 +93,7 @@ Each app also runs on its own: `cd frontend && npm install && npm run dev` (same
 1. Set `ADMIN_EMAIL` and `ADMIN_PASSWORD` in `backend/.env`, then run `npm run seed`.
 2. Open the admin dashboard and sign in.
 3. **Products:** set the real price and stock for "MAI WADI Water Can". While the price is 0 the product shows "Contact us" and can't be ordered online.
-4. **Site settings:** check the contact numbers (pre-filled from the truck: 09 277 8993 / 050 908 7560, WhatsApp 971509087560), and add your email, address, hours, social links and delivery fee.
+4. **Site settings:** check the contact numbers (the website currently shows the official number +971 50 383 9976 / WhatsApp 971503839976 from `frontend/src/utils/brand.ts`, overriding these fields), and add your email, address, hours, social links and delivery fee.
 5. **Banners:** upload promotional banners. Active ones appear on the website homepage automatically.
 
 ## Deployment

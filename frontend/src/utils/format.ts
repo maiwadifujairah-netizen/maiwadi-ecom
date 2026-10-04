@@ -18,6 +18,8 @@ const intl = (n: string) => {
   const d = n.replace(/\D/g, '').replace(/^00/, '');
   return d.startsWith('0') ? `971${d.slice(1)}` : d;
 };
+/** Pre-filled text for the general "chat with us" WhatsApp buttons (Contact page + floating icon). */
+export const WA_ENQUIRY = 'Hello MAI WADI, I would like to enquire about your drinking water products and delivery.';
 export const waHref = (n: string, text = '') => `https://wa.me/${intl(n)}${text ? `?text=${encodeURIComponent(text)}` : ''}`;
 export const isExternal = (url: string) => /^https?:\/\//.test(url);
 

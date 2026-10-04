@@ -14,6 +14,7 @@ const OrderConfirmation = lazy(() => import('./pages/OrderConfirmation'));
 const Login = lazy(() => import('./pages/Login'));
 const Account = lazy(() => import('./pages/Account'));
 const NotFound = lazy(() => import('./pages/NotFound'));
+const Legal = lazy(() => import('./pages/Legal'));
 
 export default function App() {
   return (
@@ -31,6 +32,8 @@ export default function App() {
           <Route path="login" element={<Login />} />
           <Route path="register" element={<Login mode="register" />} />
           <Route path="account" element={<Account />} />
+          <Route path="privacy" element={<Legal page="privacy" />} />
+          <Route path="terms" element={<Legal page="terms" />} />
           <Route path="*" element={<NotFound />} />
         </Route>
       </Routes>

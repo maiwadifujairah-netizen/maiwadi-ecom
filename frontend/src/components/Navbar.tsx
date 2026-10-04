@@ -31,21 +31,21 @@ export default function Navbar() {
   }, []);
 
   const linkCls = ({ isActive }: { isActive: boolean }) =>
-    `relative py-2 text-sm font-semibold transition ${isActive ? 'text-ocean' : 'text-ink/80 hover:text-ocean'}`;
+    `relative py-7 text-[15px] font-semibold transition after:absolute after:inset-x-0 after:bottom-0 after:h-[3px] after:rounded-full after:bg-ocean after:transition after:duration-200 ${isActive ? 'text-ocean after:scale-x-100' : 'text-ink hover:text-ocean after:scale-x-0'}`;
 
   return (
-    <header className={`sticky top-0 z-50 bg-white/90 backdrop-blur-lg transition-shadow ${scrolled ? 'shadow-[0_1px_0_0_rgb(0_0_0/0.06)]' : ''}`}>
-      <div className="container-x flex h-20 items-center justify-between gap-4">
-        <Link to="/" aria-label="MAI WADI home" className="shrink-0"><Logo className="h-14" /></Link>
+    <header className={`sticky top-0 z-50 border-b border-slate-100 bg-white/95 backdrop-blur-lg transition-shadow ${scrolled ? 'shadow-[0_8px_24px_-16px_rgb(11_30_71/0.25)]' : ''}`}>
+      <div className="container-x flex h-[72px] items-center justify-between gap-4 lg:h-20">
+        <Link to="/" aria-label="MAI WADI home" className="shrink-0"><Logo className="h-12 lg:h-14" /></Link>
 
-        <nav className="hidden items-center gap-9 md:flex" aria-label="Main">
+        <nav className="hidden items-center gap-8 md:flex lg:gap-12" aria-label="Main">
           {LINKS.map((l) => <NavLink key={l.to} to={l.to} end={l.to === '/'} className={linkCls}>{l.label}</NavLink>)}
         </nav>
 
         <div className="flex items-center gap-1 sm:gap-2">
           {settings.mobile && (
-            <a href={telHref(settings.mobile)} className="hidden items-center gap-2 rounded-full px-3 py-2 text-sm font-semibold text-deep hover:bg-mist lg:inline-flex">
-              <Phone className="size-4" /> {settings.mobile}
+            <a href={telHref(settings.mobile)} className="mr-2 hidden items-center gap-2.5 border-r border-slate-200 py-1 pr-5 text-[15px] font-bold text-ink hover:text-ocean lg:inline-flex">
+              <Phone className="size-[18px] text-ocean" /> {settings.mobile}
             </a>
           )}
           <Link to={user ? '/account' : '/login'} className="rounded-full p-2.5 text-ink hover:bg-mist" aria-label="Account">
@@ -54,7 +54,7 @@ export default function Navbar() {
           <Link to="/cart" className="relative rounded-full p-2.5 text-ink hover:bg-mist" aria-label={`Cart, ${count} items`}>
             <ShoppingCart className="size-5" />
             {count > 0 && (
-              <span className="absolute -top-0.5 -right-0.5 grid min-w-5 place-items-center rounded-full bg-aqua px-1 text-[11px] leading-5 font-bold text-white">{count}</span>
+              <span className="absolute -top-0.5 -right-0.5 grid min-w-5 place-items-center rounded-full bg-ocean px-1 text-[11px] leading-5 font-bold text-white ring-2 ring-white">{count}</span>
             )}
           </Link>
           <button className="rounded-full p-2.5 text-ink hover:bg-mist md:hidden" onClick={() => setOpen((o) => !o)} aria-label="Menu" aria-expanded={open}>
@@ -64,7 +64,7 @@ export default function Navbar() {
       </div>
 
       {open && (
-        <nav className="border-t border-slate-100 bg-white md:hidden" aria-label="Mobile">
+        <nav className="border-t border-slate-100 bg-white shadow-lg md:hidden" aria-label="Mobile">
           <div className="container-x flex flex-col py-3">
             {LINKS.map((l) => (
               <NavLink key={l.to} to={l.to} end={l.to === '/'} className={({ isActive }) => `rounded-xl px-3 py-3 font-semibold ${isActive ? 'bg-mist text-ocean' : 'text-ink'}`}>

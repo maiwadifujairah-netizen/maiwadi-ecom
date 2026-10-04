@@ -1,6 +1,10 @@
 import { AlertTriangle, Loader2, PackageOpen } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { mediaUrl } from '../services/api';
+import { cdnImage } from '../utils/format';
+
+/** Shown when a product/banner image is missing or fails: the real MAI WADI can, never a broken icon. */
+const FALLBACK = '/images/water-can.webp';
 
 export function Spinner({ className = 'size-5' }: { className?: string }) {
   return <Loader2 className={`${className} animate-spin`} aria-hidden="true" />;
@@ -39,14 +43,14 @@ export function EmptyState({ title, text, action }: { title: string; text?: stri
 export function Img({ src, alt, className = '', eager = false }: { src?: string; alt: string; className?: string; eager?: boolean }) {
   return (
     <img
-      src={mediaUrl(src) || '/images/favicon.png'}
+      src={cdnImage(mediaUrl(src), 1200) || FALLBACK}
       alt={alt}
       loading={eager ? 'eager' : 'lazy'}
       decoding="async"
       className={className}
       onError={(e) => {
         const img = e.currentTarget;
-        if (!img.src.endsWith('/images/favicon.png')) img.src = '/images/favicon.png';
+        if (!img.src.endsWith(FALLBACK)) img.src = FALLBACK;
       }}
     />
   );
