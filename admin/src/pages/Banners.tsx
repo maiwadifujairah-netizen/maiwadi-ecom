@@ -12,6 +12,12 @@ import { BANNER_POSITIONS, type Banner, type BannerPosition } from '../types';
 type Placement = 'hero' | 'promo';
 type Form = Required<Omit<Banner, '_id'>>;
 
+/**
+ * Hero banners are image-first: the artwork carries its own text, so the editor hides title/description.
+ * The API still requires a title (it is the image's alt text), so new heroes get this one; existing values are kept.
+ */
+const HERO_ALT = 'MAI WADI — pure drinking water, delivered to your door';
+
 const EMPTY: Form = {
   placement: 'hero', title: '', subtitle: '', image: '', mobileImage: '',
   desktopPosition: 'center', mobilePosition: 'center', showTitle: true, showSubtitle: true, showButtons: true,
@@ -54,6 +60,7 @@ export default function AdminBanners() {
   const list = (data ?? []).filter((b) => (b.placement ?? 'promo') === tab);
   const liveHeroId = (data ?? []).find((b) => b.placement === 'hero' && b.isActive)?._id; // API returns order-sorted
   const set = <K extends keyof Form>(k: K, v: Form[K]) => setF((x) => ({ ...x, [k]: v }));
+  const isHero = f.placement === 'hero';
 
   const open = (b: Banner | 'new') => {
     setF(b === 'new'
@@ -65,13 +72,14 @@ export default function AdminBanners() {
   async function save(e: FormEvent) {
     e.preventDefault();
     if (!f.image) return toast('Please upload the desktop banner image', 'error');
-    if (f.title.trim().length < 2) return toast('Please enter a title (it is also used as the image description for accessibility)', 'error');
+    const body = isHero && f.title.trim().length < 2 ? { ...f, title: HERO_ALT } : f;
+    if (body.title.trim().length < 2) return toast('Please enter a title', 'error');
     if (Boolean(f.buttonText) !== Boolean(f.buttonLink)) return toast('Primary button needs both text and a link', 'error');
     if (Boolean(f.secondaryButtonText) !== Boolean(f.secondaryButtonLink)) return toast('Secondary button needs both text and a link', 'error');
     setBusy(true);
     try {
-      if (editing === 'new') await api.post('/banners', f);
-      else if (editing) await api.put(`/banners/${editing._id}`, f);
+      if (editing === 'new') await api.post('/banners', body);
+      else if (editing) await api.put(`/banners/${editing._id}`, body);
       toast(f.isActive ? 'Banner saved — the homepage now shows this change' : 'Banner saved (inactive, not shown on the homepage)');
       setEditing(null);
       reload();
@@ -104,7 +112,6 @@ export default function AdminBanners() {
   }
 
   const current = TABS.find((t) => t.key === tab)!;
-  const isHero = f.placement === 'hero';
 
   return (
     <>
@@ -133,11 +140,13 @@ export default function AdminBanners() {
             {list.map((b) => (
               <div key={b._id} className={`card overflow-hidden ${b._id === liveHeroId ? 'ring-2 ring-ocean' : ''}`}>
                 <div className="relative aspect-[16/7] bg-deep">
-                  <Img src={b.image} alt="" className="size-full object-cover" />
-                  <div className="absolute inset-0 bg-gradient-to-r from-deep/80 to-transparent p-4 text-white">
-                    <p className="font-display text-lg font-bold">{b.title}</p>
-                    <p className="line-clamp-2 text-xs text-white/80">{b.subtitle}</p>
-                  </div>
+                  <Img src={b.image} alt={b.title} className="size-full object-cover" />
+                  {b.placement !== 'hero' && (
+                    <div className="absolute inset-0 bg-gradient-to-r from-deep/80 to-transparent p-4 text-white">
+                      <p className="font-display text-lg font-bold">{b.title}</p>
+                      <p className="line-clamp-2 text-xs text-white/80">{b.subtitle}</p>
+                    </div>
+                  )}
                   <div className="absolute top-3 right-3 flex gap-1.5">
                     {b._id === liveHeroId && <span className="badge bg-emerald-500 text-white">Live</span>}
                     <span className="badge bg-white/90 text-deep">#{b.order}</span>
@@ -187,26 +196,28 @@ export default function AdminBanners() {
               </>
             )}
 
-            <div className="sm:col-span-2"><label className="label" htmlFor="b-title">Title <span className="font-normal text-muted">(also the image description for screen readers)</span></label><input id="b-title" className="input" value={f.title} onChange={(e) => set('title', e.target.value)} /></div>
-            <div className="sm:col-span-2"><label className="label" htmlFor="b-sub">Description</label><textarea id="b-sub" rows={2} className="input" value={f.subtitle} onChange={(e) => set('subtitle', e.target.value)} /></div>
-
-            {isHero && (
-              <div className="flex flex-wrap gap-x-6 gap-y-3 rounded-xl bg-slate-50 p-4 sm:col-span-2">
-                <p className="w-full text-sm font-medium">Show over the image</p>
-                <Toggle checked={f.showTitle} onChange={(v) => set('showTitle', v)} label="Title" />
-                <Toggle checked={f.showSubtitle} onChange={(v) => set('showSubtitle', v)} label="Description" />
-                <Toggle checked={f.showButtons} onChange={(v) => set('showButtons', v)} label="Buttons" />
-              </div>
-            )}
-
-            <div><label className="label" htmlFor="b-btn">{isHero ? 'Primary button text' : 'Button text'}</label><input id="b-btn" className="input" placeholder="Explore Products" value={f.buttonText} onChange={(e) => set('buttonText', e.target.value)} /></div>
-            <div><label className="label" htmlFor="b-link">{isHero ? 'Primary button link' : 'Button link'}</label><input id="b-link" className="input" placeholder="/products or https://…" value={f.buttonLink} onChange={(e) => set('buttonLink', e.target.value)} /></div>
-            {isHero && (
+            {!isHero && (
               <>
-                <div><label className="label" htmlFor="b-btn2">Secondary button text <span className="font-normal text-muted">(optional)</span></label><input id="b-btn2" className="input" placeholder="Contact Us" value={f.secondaryButtonText} onChange={(e) => set('secondaryButtonText', e.target.value)} /></div>
-                <div><label className="label" htmlFor="b-link2">Secondary button link</label><input id="b-link2" className="input" placeholder="/contact" value={f.secondaryButtonLink} onChange={(e) => set('secondaryButtonLink', e.target.value)} /></div>
+                <div className="sm:col-span-2"><label className="label" htmlFor="b-title">Title</label><input id="b-title" className="input" value={f.title} onChange={(e) => set('title', e.target.value)} /></div>
+                <div className="sm:col-span-2"><label className="label" htmlFor="b-sub">Description</label><textarea id="b-sub" rows={2} className="input" value={f.subtitle} onChange={(e) => set('subtitle', e.target.value)} /></div>
               </>
             )}
+
+            <div className="grid gap-4 rounded-xl bg-slate-50 p-4 sm:col-span-2 sm:grid-cols-2">
+              <div className="flex flex-wrap items-center justify-between gap-3 sm:col-span-2">
+                <p className="text-sm font-semibold">{isHero ? 'Buttons over the image' : 'Button'}</p>
+                {isHero && <Toggle checked={f.showButtons} onChange={(v) => set('showButtons', v)} label="Show buttons" />}
+              </div>
+              {isHero && <p className="-mt-2 text-xs text-muted sm:col-span-2">The banner artwork is shown as-is. A button appears only when both its text and link are filled in.</p>}
+              <div><label className="label" htmlFor="b-btn">{isHero ? 'Primary button text' : 'Button text'}</label><input id="b-btn" className="input" placeholder="Explore Products" value={f.buttonText} onChange={(e) => set('buttonText', e.target.value)} /></div>
+              <div><label className="label" htmlFor="b-link">{isHero ? 'Primary button link' : 'Button link'}</label><input id="b-link" className="input" placeholder="/products or https://…" value={f.buttonLink} onChange={(e) => set('buttonLink', e.target.value)} /></div>
+              {isHero && (
+                <>
+                  <div><label className="label" htmlFor="b-btn2">Secondary button text <span className="font-normal text-muted">(optional)</span></label><input id="b-btn2" className="input" placeholder="Contact Us" value={f.secondaryButtonText} onChange={(e) => set('secondaryButtonText', e.target.value)} /></div>
+                  <div><label className="label" htmlFor="b-link2">Secondary button link</label><input id="b-link2" className="input" placeholder="/contact" value={f.secondaryButtonLink} onChange={(e) => set('secondaryButtonLink', e.target.value)} /></div>
+                </>
+              )}
+            </div>
 
             <div><label className="label" htmlFor="b-order">Display order</label><input id="b-order" type="number" min={0} className="input" value={f.order} onChange={(e) => set('order', Number(e.target.value))} /></div>
             <div className="flex items-end pb-3"><Toggle checked={f.isActive} onChange={(v) => set('isActive', v)} label="Active on homepage" /></div>
