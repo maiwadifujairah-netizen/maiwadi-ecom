@@ -16,7 +16,7 @@ interface SiteValue { settings: Settings; loaded: boolean; money: (n: number) =>
 const SiteContext = createContext<SiteValue | null>(null);
 
 export function SiteProvider({ children }: { children: ReactNode }) {
-  const { data, loading, reload } = useFetch<Settings>('/settings');
+  const { data, loading, reload } = useFetch<Settings>('/settings', true);
   const settings = { ...EMPTY, ...data, phone: '', mobile: OFFICIAL_PHONE, whatsapp: OFFICIAL_WHATSAPP }; // single official number
   return (
     <SiteContext.Provider value={{ settings, loaded: !loading, money: (n) => formatMoney(n, settings.currency), reload }}>

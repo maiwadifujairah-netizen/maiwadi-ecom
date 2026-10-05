@@ -4,7 +4,7 @@ import { mediaUrl } from '../services/api';
 import { cdnImage } from '../utils/format';
 
 /** Shown when a product/banner image is missing or fails: the real MAI WADI can, never a broken icon. */
-const FALLBACK = '/images/water-can.webp';
+const FALLBACK = '/images/products/water-can.webp';
 
 export function Spinner({ className = 'size-5' }: { className?: string }) {
   return <Loader2 className={`${className} animate-spin`} aria-hidden="true" />;
@@ -40,17 +40,22 @@ export function EmptyState({ title, text, action }: { title: string; text?: stri
 }
 
 /** Image with a graceful fallback so a bad URL never shows a broken icon. */
-export function Img({ src, alt, className = '', eager = false }: { src?: string; alt: string; className?: string; eager?: boolean }) {
+export function Img({ src, alt, className = '', eager = false, product = false, width = 1200 }: {
+  src?: string; alt: string; className?: string; eager?: boolean; product?: boolean; width?: number;
+}) {
   return (
     <img
-      src={cdnImage(mediaUrl(src), 1200) || FALLBACK}
+      src={cdnImage(mediaUrl(src), width, product) || FALLBACK}
       alt={alt}
       loading={eager ? 'eager' : 'lazy'}
       decoding="async"
       className={className}
       onError={(e) => {
+        // Retry the untransformed URL once (in case a CDN transform fails), then fall back to the brand can.
         const img = e.currentTarget;
-        if (!img.src.endsWith(FALLBACK)) img.src = FALLBACK;
+        const original = mediaUrl(src);
+        if (original && !img.dataset.retried) { img.dataset.retried = '1'; img.src = original; }
+        else if (!img.src.endsWith(FALLBACK)) img.src = FALLBACK;
       }}
     />
   );

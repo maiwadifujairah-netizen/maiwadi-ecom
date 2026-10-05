@@ -12,8 +12,17 @@ const API_ORIGIN = API_URL.replace(/\/api\/?$/, '');
 
 export const api = axios.create({ baseURL: API_URL, withCredentials: true });
 
-/** Images stored by the backend (/uploads, /static) live on the API origin; Cloudinary URLs are absolute. */
-export const mediaUrl = (src?: string) => (src && /^\/(uploads|static)\//.test(src) ? API_ORIGIN + src : src);
+/**
+ * Images stored by the backend (/uploads, /static) live on the API origin; Cloudinary URLs are absolute.
+ * Older records may hold "uploads/x.jpg" (no slash), a dev host ("http://localhost:5000/uploads/x.jpg") or plain http.
+ */
+export function mediaUrl(src?: string) {
+  const s = src?.trim();
+  if (!s) return undefined;
+  const local = s.match(/^(?:https?:\/\/(?:localhost|127\.0\.0\.1)(?::\d+)?)?\/?((?:uploads|static)\/.+)$/);
+  if (local) return `${API_ORIGIN}/${local[1]}`;
+  return s.replace(/^http:\/\//, 'https://');
+}
 
 export function errorMessage(err: unknown, fallback = 'Something went wrong. Please try again.'): string {
   if (axios.isAxiosError(err)) {

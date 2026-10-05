@@ -8,8 +8,9 @@ import { useSite } from '../context/SiteContext';
 import { useAuth } from '../context/AuthContext';
 import { api, errorMessage } from '../services/api';
 import { Img, Spinner } from '../components/States';
-import { EMAIL_RE } from './Contact';
 import type { Order } from '../types';
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 type Form = { name: string; email: string; phone: string; line1: string; line2: string; area: string; city: string; state: string; postalCode: string; notes: string };
 type PaymentInit = { keyId: string; razorpayOrderId: string; amount: number; currency: string };
@@ -177,7 +178,7 @@ export default function Checkout() {
           <ul className="mt-4 space-y-3">
             {items.map((i) => (
               <li key={i.productId} className="flex items-center gap-3 text-sm">
-                <div className="size-14 shrink-0 overflow-hidden rounded-xl bg-white"><Img src={i.image} alt="" className="size-full object-contain p-1 mix-blend-multiply" /></div>
+                <div className="size-14 shrink-0 overflow-hidden rounded-xl bg-white"><Img src={i.image} alt="" product width={160} className="size-full object-contain p-1 mix-blend-multiply" /></div>
                 <span className="flex-1">{i.name} <span className="text-muted">× {i.quantity}</span></span>
                 <span className="font-semibold">{money(i.price * i.quantity)}</span>
               </li>

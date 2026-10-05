@@ -30,8 +30,10 @@ export default function Navbar() {
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
+  // Blue indicator sits 6px below the text box (never touching it); keyboard focus shows the same colour + indicator
+  // instead of a browser outline box.
   const linkCls = ({ isActive }: { isActive: boolean }) =>
-    `relative py-7 text-[15px] font-semibold transition after:absolute after:inset-x-0 after:bottom-0 after:h-[3px] after:rounded-full after:bg-ocean after:transition after:duration-200 ${isActive ? 'text-ocean after:scale-x-100' : 'text-ink hover:text-ocean after:scale-x-0'}`;
+    `relative py-1.5 text-[15px] font-semibold outline-none transition-colors duration-200 ease-out after:absolute after:inset-x-0 after:-bottom-1.5 after:h-[2.5px] after:origin-center after:rounded-full after:bg-ocean after:transition-transform after:duration-300 after:ease-out focus-visible:text-ocean focus-visible:after:scale-x-100 ${isActive ? 'text-ocean after:scale-x-100' : 'text-ink after:scale-x-0 hover:text-ocean'}`;
 
   return (
     <header className={`sticky top-0 z-50 border-b border-slate-100 bg-white/95 backdrop-blur-lg transition-shadow ${scrolled ? 'shadow-[0_8px_24px_-16px_rgb(11_30_71/0.25)]' : ''}`}>
@@ -46,6 +48,11 @@ export default function Navbar() {
           {settings.mobile && (
             <a href={telHref(settings.mobile)} className="mr-2 hidden items-center gap-2.5 border-r border-slate-200 py-1 pr-5 text-[15px] font-bold text-ink hover:text-ocean lg:inline-flex">
               <Phone className="size-[18px] text-ocean" /> {settings.mobile}
+            </a>
+          )}
+          {settings.mobile && (
+            <a href={telHref(settings.mobile)} className="rounded-full p-2.5 text-ocean hover:bg-mist lg:hidden" aria-label={`Call ${settings.mobile}`}>
+              <Phone className="size-5" />
             </a>
           )}
           <Link to={user ? '/account' : '/login'} className="rounded-full p-2.5 text-ink hover:bg-mist" aria-label="Account">
@@ -67,7 +74,7 @@ export default function Navbar() {
         <nav className="border-t border-slate-100 bg-white shadow-lg md:hidden" aria-label="Mobile">
           <div className="container-x flex flex-col py-3">
             {LINKS.map((l) => (
-              <NavLink key={l.to} to={l.to} end={l.to === '/'} className={({ isActive }) => `rounded-xl px-3 py-3 font-semibold ${isActive ? 'bg-mist text-ocean' : 'text-ink'}`}>
+              <NavLink key={l.to} to={l.to} end={l.to === '/'} className={({ isActive }) => `rounded-xl px-3 py-3 font-semibold outline-none transition-colors duration-200 focus-visible:ring-2 focus-visible:ring-ocean/40 ${isActive ? 'bg-mist text-ocean' : 'text-ink hover:text-ocean'}`}>
                 {l.label}
               </NavLink>
             ))}

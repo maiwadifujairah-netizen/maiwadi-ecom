@@ -16,7 +16,7 @@ import type { Product } from '../types';
 
 export default function ProductDetail() {
   const { slug } = useParams();
-  const { data, loading, error, reload } = useFetch<{ product: Product; related: Product[] }>(`/products/${slug}`);
+  const { data, loading, error, reload } = useFetch<{ product: Product; related: Product[] }>(`/products/${slug}`, true);
   const { add } = useCart();
   const { money, settings } = useSite();
   const { toast } = useUI();
@@ -43,14 +43,14 @@ export default function ProductDetail() {
       <div className="grid gap-10 lg:grid-cols-2 lg:gap-16">
         <div>
           <div className="media-panel aspect-square">
-            <Img src={images[active]} alt={p.name} eager className="product-img p-8 sm:p-12" />
+            <Img src={images[active]} alt={p.name} eager product className="product-img p-10 sm:p-14" />
           </div>
           {images.length > 1 && (
             <div className="mt-4 flex gap-3 overflow-x-auto pb-1">
               {images.map((src, i) => (
                 <button key={src} onClick={() => setActive(i)} aria-label={`Show image ${i + 1}`}
                   className={`size-20 shrink-0 overflow-hidden rounded-xl border-2 bg-mist ${i === active ? 'border-ocean' : 'border-transparent'}`}>
-                  <Img src={src} alt="" className="size-full object-contain mix-blend-multiply" />
+                  <Img src={src} alt="" product width={200} className="size-full object-contain p-2 mix-blend-multiply" />
                 </button>
               ))}
             </div>

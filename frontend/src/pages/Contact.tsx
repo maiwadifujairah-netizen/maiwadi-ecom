@@ -50,7 +50,7 @@ export default function Contact() {
 
   const details = [
     s.phone && { icon: Phone, label: 'Phone', value: s.phone, href: telHref(s.phone) },
-    s.mobile && { icon: Phone, label: 'Phone', value: s.mobile, href: telHref(s.mobile) },
+    s.mobile && { icon: Phone, label: 'Call us', value: s.mobile, href: telHref(s.mobile) },
     s.whatsapp && { icon: WhatsAppIcon, label: 'WhatsApp', value: 'Chat with our team', href: waHref(s.whatsapp, WA_ENQUIRY), external: true },
     s.email && { icon: Mail, label: 'Email', value: s.email, href: `mailto:${s.email}` },
     { icon: MapPin, label: 'Our location', value: s.address || 'Fujairah, UAE' },
@@ -72,7 +72,7 @@ export default function Contact() {
         <div>
           <h2 className="text-2xl font-bold sm:text-3xl">We're here to help</h2>
           <p className="mt-3 mb-6 max-w-md text-muted">Call, message us on WhatsApp or send the form — our team will get back to you shortly.</p>
-        <ul className="grid content-start gap-3 sm:grid-cols-2 lg:grid-cols-1">
+        <ul className="grid content-start gap-3 sm:grid-cols-2">
           {details.map((d) => {
             const body = (
               <>
@@ -83,7 +83,7 @@ export default function Contact() {
                 </span>
               </>
             );
-            const cls = 'card flex items-center gap-4 p-4 transition';
+            const cls = 'card flex h-full items-center gap-4 p-4 transition';
             return (
               <li key={d.label}>
                 {d.href
@@ -95,7 +95,7 @@ export default function Contact() {
         </ul>
         </div>
 
-        <div className="card p-6 sm:p-8">
+        <div className="card h-fit p-6 sm:p-8 lg:sticky lg:top-28">
           {state === 'sent' ? (
             <div className="flex flex-col items-center py-12 text-center" role="status">
               <CheckCircle2 className="size-14 text-emerald-500" />
@@ -106,12 +106,12 @@ export default function Contact() {
           ) : (
             <form onSubmit={submit} noValidate className="grid gap-5">
               <h2 className="text-2xl font-bold">Send us a message</h2>
-              {field('name', 'Name', { autoComplete: 'name', placeholder: 'Your name' })}
-              {field('email', 'Email', { type: 'email', autoComplete: 'email', placeholder: 'you@example.com' })}
-              {field('phone', 'Phone (optional)', { type: 'tel', autoComplete: 'tel', placeholder: 'Your phone number' })}
+              {field('name', 'Name', { autoComplete: 'name' })}
+              {field('email', 'Email', { type: 'email', autoComplete: 'email' })}
+              {field('phone', 'Phone (optional)', { type: 'tel', autoComplete: 'tel' })}
               <div>
                 <label htmlFor="message" className="label">Message</label>
-                <textarea id="message" rows={5} className="input resize-y" value={form.message} onChange={set('message')} aria-invalid={Boolean(errors.message)} placeholder="How many cans you need, your area and preferred delivery time…" />
+                <textarea id="message" rows={5} className="input resize-y" value={form.message} onChange={set('message')} aria-invalid={Boolean(errors.message)} />
                 {errors.message && <p className="field-error">{errors.message}</p>}
               </div>
               {serverError && <p className="rounded-xl bg-red-50 p-3 text-sm text-red-700" role="alert">{serverError}</p>}

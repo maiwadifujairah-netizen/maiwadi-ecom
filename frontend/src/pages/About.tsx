@@ -2,7 +2,8 @@ import { BadgeCheck, Heart, MapPin, ShieldCheck, Sparkles, Truck, Users } from '
 import { useMeta } from '../hooks/useMeta';
 import { useSite } from '../context/SiteContext';
 import PageHeader from '../components/PageHeader';
-import { DeliverySection, FacilitySection } from '../components/BrandSections';
+import { DeliverySection, FacilityCard } from '../components/BrandSections';
+import { ABOUT_IMAGE, MISSION_IMAGE } from '../utils/brand';
 
 const TRUST = [
   { icon: MapPin, label: 'Purified in Fujairah' },
@@ -32,8 +33,8 @@ export default function About() {
       </div>
 
       <section className="container-x section-y grid items-center gap-10 lg:grid-cols-[0.8fr_1.2fr] lg:gap-16">
-        <img src="/images/truck-full.jpg" alt="MAI WADI delivery truck" width={1611} height={2150} loading="lazy" decoding="async"
-          className="mx-auto h-auto w-full max-w-md rounded-2xl object-contain shadow-[0_8px_24px_-18px_rgb(11_30_71/0.35)] lg:max-w-none" />
+        <img src={ABOUT_IMAGE} alt="MAI WADI delivery truck" width={1611} height={2150} loading="lazy" decoding="async"
+          className="aspect-[4/3] w-full rounded-2xl object-cover object-[50%_72%] shadow-[0_8px_24px_-18px_rgb(11_30_71/0.35)] lg:aspect-auto lg:h-auto lg:object-contain" />
         <div>
           <span className="eyebrow">Who we are</span>
           <h2 className="section-title mt-3">A Fujairah water brand you can rely on</h2>
@@ -55,12 +56,21 @@ export default function About() {
         </div>
       </section>
 
-      <FacilitySection />
-
-      <section className="container-x pt-16 sm:pt-20">
-        <div className="rounded-2xl bg-ink px-6 py-12 text-center sm:px-12 sm:py-16">
-          <span className="eyebrow text-aqua">Our mission</span>
-          <p className="mx-auto mt-4 max-w-3xl font-display text-2xl leading-snug font-semibold text-white sm:text-3xl">{s.aboutMission || MISSION}</p>
+      {/* Facility and mission cards: side by side from lg, stacked below. */}
+      <section className="bg-mist">
+        <div className="container-x section-y grid gap-6 lg:grid-cols-2">
+          <FacilityCard />
+          {/* Water-drop photo fills the card and fades into navy, where the mission line sits. */}
+          <div className="flex h-full flex-col overflow-hidden rounded-3xl bg-[#0b2a63] shadow-[0_18px_48px_-28px_rgb(11_30_71/0.5)]">
+            <div className="relative">
+              <img src={MISSION_IMAGE} alt="MAI WADI water drop" width={716} height={656} loading="lazy" decoding="async" className="aspect-[716/656] w-full object-cover" />
+              <div className="absolute inset-x-0 bottom-0 h-1/2 bg-[linear-gradient(180deg,transparent,#0b2a63_85%)] lg:h-2/5 lg:bg-[linear-gradient(180deg,transparent,#0b2a63)]" />
+            </div>
+            <div className="relative -mt-8 flex flex-1 flex-col justify-end px-6 pb-9 sm:-mt-12 lg:-mt-20 sm:px-8 sm:pb-10">
+              <span className="eyebrow flex items-center gap-3 text-aqua">Our mission <span className="h-px w-10 bg-aqua" aria-hidden="true" /></span>
+              <p className="mt-4 font-display text-xl leading-snug font-semibold text-white sm:text-2xl">{s.aboutMission || MISSION}</p>
+            </div>
+          </div>
         </div>
       </section>
 

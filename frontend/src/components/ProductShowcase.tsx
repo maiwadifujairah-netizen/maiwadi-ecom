@@ -25,7 +25,7 @@ export default function ProductShowcase({ product }: { product: Product }) {
     <div className="grid items-center gap-8 lg:grid-cols-2 lg:gap-14">
       <Link to={`/products/${product.slug}`} aria-label={`View ${product.name}`}
         className="media-panel flex aspect-square items-center justify-center">
-        <Img src={product.images[0]} alt={product.name} className="product-img p-8 sm:p-12" />
+        <Img src={product.images[0]} alt={product.name} product className="product-img p-10 sm:p-14" />
         <div className="absolute top-5 right-5"><StockBadge stock={product.stock} price={product.price} /></div>
       </Link>
 

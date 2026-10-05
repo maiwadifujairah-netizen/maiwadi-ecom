@@ -26,7 +26,7 @@ export default function Cart() {
           {items.map((i) => (
             <li key={i.productId} className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center">
               <Link to={`/products/${i.slug}`} className="size-24 shrink-0 overflow-hidden rounded-2xl bg-mist">
-                <Img src={i.image} alt={i.name} className="size-full object-contain p-2 mix-blend-multiply" />
+                <Img src={i.image} alt={i.name} product width={200} className="size-full object-contain p-2 mix-blend-multiply" />
               </Link>
               <div className="flex-1">
                 <Link to={`/products/${i.slug}`} className="font-semibold hover:text-ocean">{i.name}</Link>

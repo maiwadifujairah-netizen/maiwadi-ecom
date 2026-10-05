@@ -12,7 +12,10 @@
   --font-display: "Outfit", ui-sans-serif, system-ui, sans-serif;
   --animate-fade-up: fade-up 0.7s cubic-bezier(0.2, 0.7, 0.2, 1) both;
   --animate-float: float 6s ease-in-out infinite;
+  --animate-marquee: marquee 32s linear infinite;
   @keyframes fade-up { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
+  /* Track holds the list twice, so shifting by exactly half lands on an identical frame: a seamless loop. */
+  @keyframes marquee { to { transform: translateX(-50%); } }
   @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
 }
 
@@ -24,7 +27,7 @@
 }
 
 @utility container-x { @apply mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8; }
-@utility section-y { @apply py-16 sm:py-20 lg:py-24; }
+@utility section-y { @apply py-12 sm:py-16 lg:py-24; }
 @utility btn { @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-full px-6 py-3 text-sm font-semibold transition duration-200 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer; }
 @utility btn-sm { @apply min-h-9 px-4 py-2 text-xs; }
 @utility btn-primary { @apply btn bg-ocean text-white shadow-sm hover:bg-deep; }

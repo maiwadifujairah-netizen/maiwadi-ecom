@@ -23,8 +23,11 @@ export const WA_ENQUIRY = 'Hello MAI WADI, I would like to enquire about your dr
 export const waHref = (n: string, text = '') => `https://wa.me/${intl(n)}${text ? `?text=${encodeURIComponent(text)}` : ''}`;
 export const isExternal = (url: string) => /^https?:\/\//.test(url);
 
-/** Cloudinary delivery transform: auto format/quality, capped width. Non-Cloudinary URLs are returned unchanged. */
-export const cdnImage = (src: string | undefined, width: number) =>
+/**
+ * Cloudinary delivery transform: auto format/quality, capped width. Non-Cloudinary URLs are returned unchanged.
+ * `trim` strips the plain studio border around a product photo so the whole can fills its frame (no cropping).
+ */
+export const cdnImage = (src: string | undefined, width: number, trim = false) =>
   src && src.includes('res.cloudinary.com/') && src.includes('/upload/')
-    ? src.replace('/upload/', `/upload/f_auto,q_auto,c_limit,w_${width}/`)
+    ? src.replace('/upload/', `/upload/${trim ? 'e_trim:10/' : ''}f_auto,q_auto,c_limit,w_${width}/`)
     : src;
