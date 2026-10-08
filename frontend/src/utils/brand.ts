@@ -19,21 +19,21 @@ export const CUSTOMERS = [
 ];
 
 /**
- * Section images, one per purpose (files in public/images/<purpose>/). Product photos never appear here:
- * the water can comes only from Admin → Products, and banners only from Admin → Banners.
+ * Section images, one per purpose (files in public/images/<purpose>/). Product cards take the can from Admin → Products,
+ * and banners come only from Admin → Banners.
  */
-export const FACTORY_IMAGE = '/images/factory/production-line.jpg'; // Home → Why choose MAI WADI?
-export const FACILITY_FLOOR_IMAGE = '/images/factory/facility-line.webp'; // About → Our facility (720×554)
+export const FACTORY_IMAGE = '/images/factory/production-line.webp'; // Home → Why choose MAI WADI? (filling line with labelled cans, 1536×1024)
+export const FACILITY_FLOOR_IMAGE = '/images/factory/facility-line.webp'; // About → Our facility: filling line with labelled cans (1082×796)
 export const FILLING_LINE_IMAGE = '/images/factory/filling-line.jpg'; // MAI WADI cans on the filling line
 export const DELIVERY_IMAGE = '/images/delivery/truck.jpg'; // MAI WADI truck, landscape
-export const DELIVERY_SCENE_IMAGE = '/images/delivery/truck-scene.webp'; // truck on a Fujairah road, 1150×416 (delivery banner + card)
-/** Same truck, lossless re-export + mild unsharp; the @2x (Lanczos) file serves high-density screens. */
-export const DELIVERY_SCENE_SRCSET = `${DELIVERY_SCENE_IMAGE} 1150w, /images/delivery/truck-scene@2x.webp 2300w`;
-export const DELIVERY_BANNER_IMAGE = '/images/delivery/delivery-scene.webp'; // worker + truck at the warehouse (Delivery section, Home & About)
-export const SUPPLY_IMAGE = '/images/delivery/supply-scene.webp'; // worker loading cans beside the truck (Products → regular supply)
+export const DELIVERY_SCENE_IMAGE = '/images/delivery/truck-numbers.webp'; // 16:9 crop of truck.jpg showing the phone numbers, 1280×720 (Reliable delivery card)
+export const DELIVERY_BANNER_IMAGE = '/images/delivery/delivery-scene.webp'; // worker + truck at the warehouse, 864×678 (Delivery section, Home & About)
+/** Inner-page hero scene (About, Products, Contact): 18.9L can, splash, sea and mountains. */
+export const WATER_HERO = { src: '/images/about/hero-water.webp', alt: 'MAI WADI 18.9L water can with water splashing by the sea and mountains', width: 1236, height: 514 };
 export const MISSION_IMAGE = '/images/about/mission-drop.webp'; // MAI WADI water drop (About → Our mission, 716×656)
-export const DELIVERY_PORTRAIT_IMAGE = '/images/delivery/truck-full.jpg'; // same truck, portrait
-export const ABOUT_IMAGE = DELIVERY_PORTRAIT_IMAGE; // "Who we are": the company's own fleet (no separate about photo yet)
+export const CAN_IMAGE = '/images/products/water-can.webp'; // official 18.9L can with the Dial Us On numbers, 1024×1535
+export const ABOUT_IMAGE = CAN_IMAGE; // About → "Who we are"
+export const SUPPLY_IMAGE = FACTORY_IMAGE; // Products → Business supply banner (same filling-line photo)
 
 /** Official contact number; overrides Admin → Settings phone/mobile/WhatsApp everywhere on the site. */
 export const OFFICIAL_PHONE = '+971 50 383 9976';

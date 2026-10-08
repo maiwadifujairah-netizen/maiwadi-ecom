@@ -9,6 +9,7 @@ import { useUI } from '../context/UIContext';
 import ProductCard, { canBuy } from '../components/ProductCard';
 import QuantitySelector from '../components/QuantitySelector';
 import StockBadge from '../components/StockBadge';
+import ZoomableImage from '../components/ZoomableImage';
 import { WhatsAppIcon } from '../components/icons';
 import { ErrorState, Img, Loading } from '../components/States';
 import { waHref } from '../utils/format';
@@ -34,7 +35,7 @@ export default function ProductDetail() {
 
   return (
     <div className="container-x py-8 sm:py-12">
-      <nav className="mb-8 flex items-center gap-1 text-sm text-muted" aria-label="Breadcrumb">
+      <nav className="mb-8 flex items-center gap-1 text-sm font-medium text-muted" aria-label="Breadcrumb">
         <Link to="/" className="hover:text-ocean">Home</Link><ChevronRight className="size-4" />
         <Link to="/products" className="hover:text-ocean">Products</Link><ChevronRight className="size-4" />
         <span className="truncate text-ink">{p.name}</span>
@@ -42,9 +43,7 @@ export default function ProductDetail() {
 
       <div className="grid gap-10 lg:grid-cols-2 lg:gap-16">
         <div>
-          <div className="media-panel aspect-square">
-            <Img src={images[active]} alt={p.name} eager product className="product-img p-10 sm:p-14" />
-          </div>
+          <ZoomableImage src={images[active]} alt={p.name} eager className="mx-auto sm:max-w-md lg:max-w-[30rem]" />
           {images.length > 1 && (
             <div className="mt-4 flex gap-3 overflow-x-auto pb-1">
               {images.map((src, i) => (
@@ -62,7 +61,7 @@ export default function ProductDetail() {
             {p.category && <Link to={`/products?category=${p.category._id}`} className="text-xs font-bold tracking-wider text-ocean uppercase">{p.category.name}</Link>}
             <StockBadge stock={p.stock} price={p.price} />
           </div>
-          <h1 className="text-3xl font-bold sm:text-4xl">{p.name}</h1>
+          <h1 className="text-3xl font-extrabold sm:text-4xl">{p.name}</h1>
           {p.shortDescription && <p className="text-lg text-muted">{p.shortDescription}</p>}
           <p className="font-display text-4xl font-bold text-deep">{p.price > 0 ? money(p.price) : 'Contact us for pricing'}</p>
           {p.price > 0 && <p className="text-sm text-muted">{p.stock > 0 ? `${p.stock} available` : 'Currently out of stock'}</p>}

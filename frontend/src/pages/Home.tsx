@@ -30,7 +30,48 @@ function WhyChoose() {
         </ul>
         <Link to="/about" className="btn-primary mt-8 px-7">Learn more about us <ArrowRight className="size-4" /></Link>
       </div>
-      <FactoryImage className="aspect-[5/4] rounded-3xl shadow-[0_24px_60px_-30px_rgb(11_30_71/0.45)]" />
+      <FactoryImage className="aspect-[3/2] rounded-3xl shadow-[0_24px_60px_-30px_rgb(11_30_71/0.45)]" />
+    </section>
+  );
+}
+
+const CERTIFICATIONS = [
+  { name: 'Emirates Quality Mark', image: '/images/certifications/emirates-quality-mark.png', alt: 'Emirates Quality Mark certificate NB0014', width: 429, height: 433,
+    text: 'Certified under Emirates Quality Mark standards for safe and high-quality drinking water.' },
+  { name: 'HACCP Certified', image: '/images/certifications/haccp-certified.png', alt: 'HACCP Certified seal', width: 512, height: 640,
+    text: 'Follows HACCP food safety standards to ensure clean, safe and hygienic drinking water.' },
+];
+
+function Certifications() {
+  // Water-splash strips sit on the light-blue backdrop at the sides (md+), their inner edges fading into it.
+  const side = 'pointer-events-none absolute inset-y-0 hidden h-full w-auto max-w-[24%] object-cover md:block';
+  return (
+    <section className="relative isolate overflow-hidden bg-[linear-gradient(180deg,#eff8fe_0%,#eef8fd_55%,#cce6fc_100%)]" aria-labelledby="certifications-title">
+      <img src="/images/certifications/splash-left.webp" alt="" width={345} height={941} loading="lazy" decoding="async"
+        className={`${side} left-0 object-right [mask-image:linear-gradient(90deg,#000_60%,transparent)]`} />
+      <img src="/images/certifications/splash-right.webp" alt="" width={345} height={941} loading="lazy" decoding="async"
+        className={`${side} right-0 object-left [mask-image:linear-gradient(270deg,#000_60%,transparent)]`} />
+      <div className="container-x relative py-14 sm:py-20">
+        <div className="mx-auto max-w-2xl text-center">
+          <span className="eyebrow flex items-center justify-center gap-3"><span className="h-px w-8 bg-ocean sm:w-12" aria-hidden="true" />Quality &amp; Certifications<span className="h-px w-8 bg-ocean sm:w-12" aria-hidden="true" /></span>
+          <h2 id="certifications-title" className="section-title mt-4 lg:text-5xl">
+            Certified Quality <span className="bg-[linear-gradient(90deg,#0a5fb0,#0b84d8)] bg-clip-text text-transparent">You Can Trust</span>
+          </h2>
+          <p className="mt-4 text-muted">MAI WADI maintains high standards of quality, safety and hygiene to ensure trusted drinking water for every customer.</p>
+        </div>
+        <ul className="mx-auto mt-10 grid max-w-3xl gap-6 sm:grid-cols-2">
+          {CERTIFICATIONS.map((c) => (
+            <li key={c.name} className="flex flex-col items-center rounded-2xl bg-white/95 p-6 text-center shadow-[0_18px_40px_-24px_rgb(11_30_71/0.35)] ring-1 ring-ocean/10 transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_22px_44px_-22px_rgb(11_132_216/0.35)] sm:p-8">
+              <div className="flex h-44 w-full items-center justify-center sm:h-52">
+                <img src={c.image} alt={c.alt} width={c.width} height={c.height} loading="lazy" decoding="async" className="h-auto max-h-full w-auto max-w-full object-contain" />
+              </div>
+              <span className="mt-6 h-0.5 w-10 rounded-full bg-ocean" aria-hidden="true" />
+              <h3 className="mt-4 text-xl font-bold">{c.name}</h3>
+              <p className="mt-2 max-w-xs text-sm leading-relaxed text-muted sm:text-[15px]">{c.text}</p>
+            </li>
+          ))}
+        </ul>
+      </div>
     </section>
   );
 }
@@ -71,6 +112,7 @@ export default function Home() {
       <HeroBanner key={hero ? `${hero._id}:${hero.image}:${hero.mobileImage}` : 'default'} banner={hero} />
       <FeatureStrip />
       <WhyChoose />
+      <Certifications />
       <FeaturedProducts {...featured} />
       <BannerCarousel banners={promos} />
       <CustomerLogos />

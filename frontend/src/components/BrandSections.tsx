@@ -2,7 +2,7 @@ import { useId } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, BadgeCheck, Building2, Droplet, House, MousePointerClick, ShieldCheck, Store, Truck, type LucideIcon } from 'lucide-react';
 import { useSite } from '../context/SiteContext';
-import { DELIVERY_BANNER_IMAGE, DELIVERY_SCENE_IMAGE, DELIVERY_SCENE_SRCSET, FACILITY_FLOOR_IMAGE, FACTORY_IMAGE, FILLING_LINE_IMAGE, HIGHLIGHTS } from '../utils/brand';
+import { DELIVERY_BANNER_IMAGE, DELIVERY_SCENE_IMAGE, FACILITY_FLOOR_IMAGE, FACTORY_IMAGE, FILLING_LINE_IMAGE, HIGHLIGHTS } from '../utils/brand';
 
 /** Same URL as the Home product list, so every product-image spot shares one cached request. */
 export const FEATURED_URL = '/products?featured=true&limit=8';
@@ -55,8 +55,8 @@ const FACILITY_ICONS: LucideIcon[] = [Droplet, ShieldCheck, BadgeCheck, Truck];
 export function FacilityCard() {
   return (
     <div className="flex h-full flex-col overflow-hidden rounded-3xl bg-white shadow-[0_18px_48px_-28px_rgb(11_30_71/0.35)] ring-1 ring-slate-100">
-      <img src={FACILITY_FLOOR_IMAGE} alt="MAI WADI purification and filling facility" width={720} height={554} loading="lazy" decoding="async"
-        className="aspect-[720/554] w-full object-cover" />
+      <img src={FACILITY_FLOOR_IMAGE} alt="MAI WADI filling line with labelled water cans" width={1082} height={796} loading="lazy" decoding="async"
+        className="aspect-[1082/796] w-full object-cover" />
       <div className="flex flex-1 flex-col px-6 py-7 sm:px-8 sm:py-8">
         <span className="eyebrow flex items-center gap-3">Our facility <span className="h-px w-10 bg-ocean" aria-hidden="true" /></span>
         <h2 className="mt-3 text-2xl leading-tight font-bold sm:text-[1.75rem]">Purified in Fujairah with care</h2>
@@ -106,32 +106,32 @@ export function DeliverySection() {
     <section className="container-x section-y">
       {/*
         White copy panel with a curved right edge laid over the photo's left edge (xl+), so the curve, not a fade, separates
-        them. Below xl the photo is stacked on top at its own ratio, so nothing is cropped.
+        them; the photo fills the full height on the right. 16:7 card from lg (taller only if the copy needs it); below lg the photo is stacked on top at its own ratio.
       */}
-      <div className="relative isolate overflow-hidden rounded-3xl bg-[linear-gradient(180deg,#ffffff_60%,#eaf4fc_100%)] shadow-[0_18px_48px_-28px_rgb(11_30_71/0.35)] ring-1 ring-ocean/10">
-        {/* xl+: the whole photo (never cropped), bottom-aligned; any spare height above it is the photo's own sky colour. */}
-        <div className="relative aspect-[1206/618] xl:absolute xl:inset-y-0 xl:right-0 xl:aspect-auto xl:w-[62%] xl:overflow-hidden xl:bg-[linear-gradient(90deg,#f7f9fa_0%,#fbfcfc_11%,#5fb8f6_15.5%,#3eacf8_20%,#36a9f7_35%,#3aaaf8_55%,#48b2fa_75%,#8fcdf9_100%)]">
-          <img src={DELIVERY_BANNER_IMAGE} alt="MAI WADI team loading water cans beside the delivery truck" width={1206} height={618} loading="lazy" decoding="async"
-            className="size-full object-cover xl:absolute xl:inset-x-0 xl:bottom-0 xl:h-auto xl:[mask-image:linear-gradient(180deg,transparent,rgb(0_0_0/0.5)_6%,#000_14%)]" />
+      <div className="relative isolate overflow-hidden @container rounded-3xl bg-[linear-gradient(180deg,#ffffff_60%,#eaf4fc_100%)] shadow-[0_18px_48px_-28px_rgb(11_30_71/0.35)] ring-1 ring-ocean/10">
+        {/* lg+: photo covers the right 60% (starting just under the curve tip) at full card height, so the worker stays visible. */}
+        <div className="relative aspect-[864/678] lg:absolute lg:inset-y-0 lg:right-0 lg:aspect-auto lg:w-[60%]">
+          <img src={DELIVERY_BANNER_IMAGE} alt="MAI WADI team loading water cans beside the delivery truck" width={864} height={678} loading="lazy" decoding="async"
+            className="size-full object-cover lg:object-[20%_60%]" />
         </div>
-        {/* Curved white panel (xl+), its right edge an elliptical arc over the photo; the wave is clipped inside it. */}
-        <div aria-hidden="true" className="absolute inset-y-0 left-0 isolate hidden w-[41%] overflow-hidden bg-[linear-gradient(160deg,#ffffff_55%,#eef6fd_100%)] shadow-[14px_0_40px_-22px_rgb(11_30_71/0.35)] [border-radius:0_9%_9%_0/0_50%_50%_0] xl:block">
+        {/* Curved white panel (lg+), its right edge an elliptical arc over the photo; the wave is clipped inside it. */}
+        <div aria-hidden="true" className="absolute inset-y-0 left-0 isolate hidden w-[41%] overflow-hidden bg-[linear-gradient(160deg,#ffffff_55%,#eef6fd_100%)] shadow-[14px_0_40px_-22px_rgb(11_30_71/0.35)] [border-radius:0_9%_9%_0/0_50%_50%_0] lg:block">
           <WaterWave className="h-40 w-[75%]" />
         </div>
-        <WaterWave className="h-36 w-[80%] xl:hidden" />
-        <div className="relative px-6 pt-6 pb-10 sm:px-10 sm:pb-12 xl:w-[40%] xl:px-12 xl:py-8">
+        <WaterWave className="h-36 w-[80%] lg:hidden" />
+        <div className="relative px-6 pt-6 pb-10 sm:px-10 sm:pb-12 lg:flex lg:min-h-[43.75cqw] lg:w-[40%] lg:flex-col lg:justify-center lg:py-8 xl:px-12">
           <span className="eyebrow flex items-center gap-3">Delivery <span className="h-px w-10 bg-ocean" aria-hidden="true" /></span>
-          <h2 className="section-title mt-3 xl:text-[2.1rem]">Fresh water, delivered to <span className="text-ocean">your door</span></h2>
-          <p className="mt-4 leading-relaxed text-muted xl:mt-3 xl:text-[15px]">{s.aboutDelivery || 'Our own delivery team brings MAI WADI water cans to homes and businesses across Fujairah.'}</p>
-          <ul className="mt-6 grid grid-cols-4 xl:mt-5 divide-x divide-slate-200/80">
+          <h2 className="section-title mt-3">Fresh water, delivered to <span className="text-ocean">your door</span></h2>
+          <p className="mt-4 leading-relaxed text-muted lg:text-[15px] xl:text-base">{s.aboutDelivery || 'Our own delivery team brings MAI WADI water cans to homes and businesses across Fujairah.'}</p>
+          <ul className="mt-6 grid grid-cols-4 divide-x divide-slate-200/80">
             {SERVICES.map(({ icon: Icon, label }) => (
               <li key={label} className="flex flex-col items-center gap-2 px-1 text-center">
-                <span className="grid size-11 place-items-center rounded-full bg-mist text-ocean sm:size-12 xl:size-10"><Icon className="size-5" strokeWidth={1.75} absoluteStrokeWidth aria-hidden="true" /></span>
+                <span className="grid size-11 place-items-center rounded-full bg-mist text-ocean sm:size-12"><Icon className="size-5" strokeWidth={1.75} absoluteStrokeWidth aria-hidden="true" /></span>
                 <span className="text-xs leading-tight font-medium text-ink sm:text-[13px]">{label}</span>
               </li>
             ))}
           </ul>
-          <div className="mt-7 flex flex-wrap gap-3 xl:mt-6">
+          <div className="mt-7 flex flex-wrap gap-3">
             <Link to="/products" className="btn-primary px-7">Order now <ArrowRight className="size-4" /></Link>
             <Link to="/contact" className="btn-outline px-7">Contact us</Link>
           </div>
@@ -152,8 +152,8 @@ export function ImageFeatures() {
     },
     {
       title: 'Reliable delivery', text: delivery || 'Our own delivery fleet brings your water cans right to your doorstep.',
-      media: <img src={DELIVERY_SCENE_IMAGE} srcSet={DELIVERY_SCENE_SRCSET} sizes="(min-width: 640px) 78vw, 155vw" alt="MAI WADI delivery truck" width={1150} height={416}
-        loading="lazy" decoding="async" className="size-full object-cover object-[67%_50%]" />,
+      media: <img src={DELIVERY_SCENE_IMAGE} alt="MAI WADI delivery truck with contact numbers 09 277 8993 and 050 908 7560" width={1280} height={720}
+        loading="lazy" decoding="async" className="size-full object-cover" />,
     },
   ];
   return (

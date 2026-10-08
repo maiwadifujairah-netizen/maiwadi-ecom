@@ -7,7 +7,7 @@ import PageHeader from '../components/PageHeader';
 import ProductCard from '../components/ProductCard';
 import Pagination from '../components/Pagination';
 import { ImageFeatures, WaterWave } from '../components/BrandSections';
-import { SUPPLY_IMAGE } from '../utils/brand';
+import { SUPPLY_IMAGE, WATER_HERO } from '../utils/brand';
 import { EmptyState, ErrorState, Loading } from '../components/States';
 import type { Category, Paged, Product } from '../types';
 
@@ -46,7 +46,7 @@ export default function Products() {
 
   return (
     <>
-      <PageHeader crumb="Products" title="Our products" text="Purified drinking water, ready for delivery to your home or office." />
+      <PageHeader crumb="Products" title="Our products" text="Purified drinking water, ready for delivery to your home or office." image={WATER_HERO} />
 
       <section className="container-x pt-8 pb-16 sm:pb-20">
         <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
@@ -81,11 +81,11 @@ export default function Products() {
           <ImageFeatures />
         </div>
 
-        {/* Same light-banner treatment as the delivery section: copy left over the wave, full truck right. */}
+        {/* Same light-banner treatment as the delivery section: copy left over the wave, filling-line photo right. */}
         <div className="relative isolate mt-16 overflow-hidden rounded-3xl bg-[linear-gradient(115deg,#ffffff_0%,#f3f9fe_35%,#e3f1fc_100%)] shadow-[0_18px_48px_-28px_rgb(11_30_71/0.35)] ring-1 ring-ocean/10">
-          <div className="relative aspect-[2/1] sm:aspect-[21/9] xl:absolute xl:inset-y-0 xl:right-0 xl:aspect-auto xl:w-[64%]">
-            <img src={SUPPLY_IMAGE} alt="MAI WADI team loading water cans onto the delivery truck" width={1198} height={536} loading="lazy" decoding="async"
-              className="size-full object-cover object-[50%_50%] xl:object-[45%_50%] [mask-image:linear-gradient(90deg,transparent,#000_8%),linear-gradient(180deg,#000_95%,transparent)] [mask-composite:intersect] xl:[mask-image:linear-gradient(90deg,transparent,rgb(0_0_0/0.6)_2%,#000_4%)]" />
+          <div className="relative aspect-[3/2] sm:aspect-[16/9] xl:absolute xl:inset-y-0 xl:right-0 xl:aspect-auto xl:w-[64%]">
+            <img src={SUPPLY_IMAGE} alt="MAI WADI cans with the Dial Us On label on the filling line" width={1536} height={1024} loading="lazy" decoding="async"
+              className="size-full object-cover object-[40%_60%] [mask-image:linear-gradient(90deg,transparent,#000_8%),linear-gradient(180deg,#000_95%,transparent)] [mask-composite:intersect] xl:[mask-image:linear-gradient(90deg,transparent,rgb(0_0_0/0.6)_2%,#000_4%)]" />
           </div>
           <WaterWave className="h-36 w-[70%] xl:h-44 xl:w-[36%]" />
           {/* Faint drop outline where the copy meets the photo (decorative, desktop only). */}

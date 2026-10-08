@@ -1,5 +1,5 @@
 import { AlertTriangle, Loader2, PackageOpen } from 'lucide-react';
-import type { ReactNode } from 'react';
+import type { MouseEventHandler, ReactNode } from 'react';
 import { mediaUrl } from '../services/api';
 import { cdnImage } from '../utils/format';
 
@@ -40,8 +40,8 @@ export function EmptyState({ title, text, action }: { title: string; text?: stri
 }
 
 /** Image with a graceful fallback so a bad URL never shows a broken icon. */
-export function Img({ src, alt, className = '', eager = false, product = false, width = 1200 }: {
-  src?: string; alt: string; className?: string; eager?: boolean; product?: boolean; width?: number;
+export function Img({ src, alt, className = '', eager = false, product = false, width = 1200, onClick }: {
+  src?: string; alt: string; className?: string; eager?: boolean; product?: boolean; width?: number; onClick?: MouseEventHandler<HTMLImageElement>;
 }) {
   return (
     <img
@@ -50,6 +50,7 @@ export function Img({ src, alt, className = '', eager = false, product = false, 
       loading={eager ? 'eager' : 'lazy'}
       decoding="async"
       className={className}
+      onClick={onClick}
       onError={(e) => {
         // Retry the untransformed URL once (in case a CDN transform fails), then fall back to the brand can.
         const img = e.currentTarget;

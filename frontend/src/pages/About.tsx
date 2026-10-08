@@ -3,7 +3,7 @@ import { useMeta } from '../hooks/useMeta';
 import { useSite } from '../context/SiteContext';
 import PageHeader from '../components/PageHeader';
 import { DeliverySection, FacilityCard } from '../components/BrandSections';
-import { ABOUT_IMAGE, MISSION_IMAGE } from '../utils/brand';
+import { ABOUT_IMAGE, MISSION_IMAGE, WATER_HERO } from '../utils/brand';
 
 const TRUST = [
   { icon: MapPin, label: 'Purified in Fujairah' },
@@ -19,22 +19,26 @@ export default function About() {
   useMeta('About Us', 'Learn about MAI WADI — purified drinking water delivered to homes and businesses.');
   return (
     <>
-      <PageHeader crumb="About Us" eyebrow="About MAI WADI" title="Water as pure as you" text={`${s.siteName} — ${s.tagline || 'As pure as you'}.`} />
+      <PageHeader crumb="About Us" eyebrow="About MAI WADI" title="Water as pure as you" text={`${s.siteName} — ${s.tagline || 'As pure as you'}.`} image={WATER_HERO} />
 
-      <div className="container-x pt-10">
-        <ul className="card grid grid-cols-2 gap-y-6 p-6 lg:grid-cols-4">
+      {/* Glass trust strip overlapping the hero's lower edge. */}
+      <div className="container-x relative z-10 mt-6 lg:-mt-16">
+        <ul className="card grid grid-cols-2 gap-y-6 bg-white/85 p-6 backdrop-blur-md lg:grid-cols-4">
           {TRUST.map(({ icon: Icon, label }, i) => (
-            <li key={label} className={`flex flex-col items-center gap-2.5 px-3 text-center ${i ? 'lg:border-l lg:border-slate-100' : ''}`}>
-              <Icon className="size-7 text-ocean" strokeWidth={1.75} />
-              <span className="text-sm font-semibold text-ink">{label}</span>
+            <li key={label} className={`group flex cursor-default flex-col items-center gap-2 px-3 text-center ${i ? 'lg:border-l lg:border-slate-100' : ''}`}>
+              {/* Hover (mouse) or press (touch) fills the icon circle with brand blue. */}
+              <span className="grid size-12 place-items-center rounded-full text-ocean transition-colors duration-300 group-hover:bg-ocean group-hover:text-white group-active:bg-ocean group-active:text-white">
+                <Icon className="size-7" strokeWidth={1.75} />
+              </span>
+              <span className="text-sm font-semibold text-ink transition-colors duration-300 group-hover:text-ocean group-active:text-ocean">{label}</span>
             </li>
           ))}
         </ul>
       </div>
 
       <section className="container-x section-y grid items-center gap-10 lg:grid-cols-[0.8fr_1.2fr] lg:gap-16">
-        <img src={ABOUT_IMAGE} alt="MAI WADI delivery truck" width={1611} height={2150} loading="lazy" decoding="async"
-          className="aspect-[4/3] w-full rounded-2xl object-cover object-[50%_72%] shadow-[0_8px_24px_-18px_rgb(11_30_71/0.35)] lg:aspect-auto lg:h-auto lg:object-contain" />
+        <img src={ABOUT_IMAGE} alt="MAI WADI 18.9L bottled drinking water can" width={1024} height={1535} loading="lazy" decoding="async"
+          className="aspect-[3/4] w-full rounded-2xl object-cover object-[50%_50%] shadow-[0_8px_24px_-18px_rgb(11_30_71/0.35)] lg:aspect-auto lg:h-auto lg:object-contain" />
         <div>
           <span className="eyebrow">Who we are</span>
           <h2 className="section-title mt-3">A Fujairah water brand you can rely on</h2>

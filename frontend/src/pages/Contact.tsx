@@ -4,6 +4,7 @@ import { useMeta } from '../hooks/useMeta';
 import { useSite } from '../context/SiteContext';
 import { api, errorMessage } from '../services/api';
 import PageHeader from '../components/PageHeader';
+import { WATER_HERO } from '../utils/brand';
 import { WhatsAppIcon } from '../components/icons';
 import { Spinner } from '../components/States';
 import { WA_ENQUIRY, telHref, waHref } from '../utils/format';
@@ -67,7 +68,7 @@ export default function Contact() {
 
   return (
     <>
-      <PageHeader crumb="Contact" eyebrow="Get in touch" title="Contact us" text="Order online, call us or send a message. Our team is ready to assist you with your water delivery needs." />
+      <PageHeader crumb="Contact" eyebrow="Get in touch" title="Contact us" text="Order online, call us or send a message. Our team is ready to assist you with your water delivery needs." image={WATER_HERO} />
       <section className="container-x grid gap-8 pt-10 pb-16 sm:pb-20 lg:grid-cols-[1fr_1.2fr] lg:gap-12">
         <div>
           <h2 className="text-2xl font-bold sm:text-3xl">We're here to help</h2>
