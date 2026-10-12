@@ -19,10 +19,10 @@ export default function About() {
   useMeta('About Us', 'Learn about MAI WADI — purified drinking water delivered to homes and businesses.');
   return (
     <>
-      <PageHeader crumb="About Us" eyebrow="About MAI WADI" title="Water as pure as you" text={`${s.siteName} — ${s.tagline || 'As pure as you'}.`} image={WATER_HERO} />
+      <PageHeader crumb="About Us" eyebrow="About MAI WADI" title={<>Water as <span className="text-ocean lg:block">pure as you</span></>} text={`${s.siteName} — ${s.tagline || 'As pure as you'}.`} can={WATER_HERO} />
 
-      {/* Glass trust strip overlapping the hero's lower edge. */}
-      <div className="container-x relative z-10 mt-6 lg:-mt-16">
+      {/* Glass trust strip under the hero. */}
+      <div className="container-x relative z-10 mt-8">
         <ul className="card grid grid-cols-2 gap-y-6 bg-white/85 p-6 backdrop-blur-md lg:grid-cols-4">
           {TRUST.map(({ icon: Icon, label }, i) => (
             <li key={label} className={`group flex cursor-default flex-col items-center gap-2 px-3 text-center ${i ? 'lg:border-l lg:border-slate-100' : ''}`}>
@@ -36,9 +36,9 @@ export default function About() {
         </ul>
       </div>
 
-      <section className="container-x section-y grid items-center gap-10 lg:grid-cols-[0.8fr_1.2fr] lg:gap-16">
-        <img src={ABOUT_IMAGE} alt="MAI WADI 18.9L bottled drinking water can" width={1024} height={1535} loading="lazy" decoding="async"
-          className="aspect-[3/4] w-full rounded-2xl object-cover object-[50%_50%] shadow-[0_8px_24px_-18px_rgb(11_30_71/0.35)] lg:aspect-auto lg:h-auto lg:object-contain" />
+      <section className="container-x section-y grid items-center gap-10 lg:grid-cols-2 lg:gap-16">
+        <img src={ABOUT_IMAGE} alt="MAI WADI cans on the filling line" width={1536} height={1024} loading="lazy" decoding="async"
+          className="aspect-[3/2] w-full rounded-3xl object-cover shadow-[0_24px_60px_-30px_rgb(11_30_71/0.45)]" />
         <div>
           <span className="eyebrow">Who we are</span>
           <h2 className="section-title mt-3">A Fujairah water brand you can rely on</h2>

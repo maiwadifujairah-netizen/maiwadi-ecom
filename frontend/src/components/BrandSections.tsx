@@ -110,8 +110,8 @@ export function DeliverySection() {
       */}
       <div className="relative isolate overflow-hidden @container rounded-3xl bg-[linear-gradient(180deg,#ffffff_60%,#eaf4fc_100%)] shadow-[0_18px_48px_-28px_rgb(11_30_71/0.35)] ring-1 ring-ocean/10">
         {/* lg+: photo covers the right 60% (starting just under the curve tip) at full card height, so the worker stays visible. */}
-        <div className="relative aspect-[864/678] lg:absolute lg:inset-y-0 lg:right-0 lg:aspect-auto lg:w-[60%]">
-          <img src={DELIVERY_BANNER_IMAGE} alt="MAI WADI team loading water cans beside the delivery truck" width={864} height={678} loading="lazy" decoding="async"
+        <div className="relative aspect-[1416/1111] lg:absolute lg:inset-y-0 lg:right-0 lg:aspect-auto lg:w-[60%]">
+          <img src={DELIVERY_BANNER_IMAGE} alt="MAI WADI team loading water cans beside the delivery truck" width={1416} height={1111} loading="lazy" decoding="async"
             className="size-full object-cover lg:object-[20%_60%]" />
         </div>
         {/* Curved white panel (lg+), its right edge an elliptical arc over the photo; the wave is clipped inside it. */}
@@ -148,7 +148,7 @@ export function ImageFeatures() {
   const cards = [
     {
       title: 'Purified & certified', text: 'Advanced purification, low sodium, and quality that meets UAE.S/GSO standards.',
-      media: <img src={FILLING_LINE_IMAGE} alt="MAI WADI cans on the purification and filling line" width={1555} height={1012} loading="lazy" decoding="async" className="size-full object-cover" />,
+      media: <img src={FILLING_LINE_IMAGE} alt="MAI WADI cans on the purification and filling line" width={1416} height={1111} loading="lazy" decoding="async" className="size-full object-cover" />,
     },
     {
       title: 'Reliable delivery', text: delivery || 'Our own delivery fleet brings your water cans right to your doorstep.',

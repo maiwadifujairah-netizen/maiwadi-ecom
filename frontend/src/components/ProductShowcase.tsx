@@ -9,7 +9,7 @@ import { canBuy } from './ProductCard';
 import QuantitySelector from './QuantitySelector';
 import StockBadge from './StockBadge';
 import { WhatsAppIcon } from './icons';
-import ZoomableImage from './ZoomableImage';
+import { Img } from './States';
 import { HIGHLIGHTS } from '../utils/brand';
 import { waHref } from '../utils/format';
 
@@ -23,9 +23,10 @@ export default function ProductShowcase({ product }: { product: Product }) {
 
   return (
     <div className="grid items-center gap-8 lg:grid-cols-2 lg:gap-14">
-      <ZoomableImage src={product.images[0]} alt={product.name} className="mx-auto sm:max-w-md lg:max-w-[30rem]">
+      <div className="media-panel mx-auto block aspect-[2/3] w-full sm:max-w-md lg:max-w-[30rem]">
+        <Img src={product.images[0]} alt={product.name} product className="product-img" />
         <span className="absolute top-5 right-5"><StockBadge stock={product.stock} price={product.price} /></span>
-      </ZoomableImage>
+      </div>
 
       <div className="flex flex-col gap-5">
         {product.category && <span className="eyebrow self-start">{product.category.name}</span>}

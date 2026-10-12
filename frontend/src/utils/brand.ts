@@ -22,17 +22,17 @@ export const CUSTOMERS = [
  * Section images, one per purpose (files in public/images/<purpose>/). Product cards take the can from Admin → Products,
  * and banners come only from Admin → Banners.
  */
-export const FACTORY_IMAGE = '/images/factory/production-line.webp'; // Home → Why choose MAI WADI? (filling line with labelled cans, 1536×1024)
+export const FACTORY_IMAGE = '/images/factory/why-choose.webp'; // Home → Why choose MAI WADI? (filling line with labelled cans, 1536×1024)
 export const FACILITY_FLOOR_IMAGE = '/images/factory/facility-line.webp'; // About → Our facility: filling line with labelled cans (1082×796)
-export const FILLING_LINE_IMAGE = '/images/factory/filling-line.jpg'; // MAI WADI cans on the filling line
+export const FILLING_LINE_IMAGE = '/images/factory/purified-line.webp'; // MAI WADI cans on the filling line, 1416×1111 (Products → Purified & certified card)
 export const DELIVERY_IMAGE = '/images/delivery/truck.jpg'; // MAI WADI truck, landscape
 export const DELIVERY_SCENE_IMAGE = '/images/delivery/truck-numbers.webp'; // 16:9 crop of truck.jpg showing the phone numbers, 1280×720 (Reliable delivery card)
-export const DELIVERY_BANNER_IMAGE = '/images/delivery/delivery-scene.webp'; // worker + truck at the warehouse, 864×678 (Delivery section, Home & About)
-/** Inner-page hero scene (About, Products, Contact): 18.9L can, splash, sea and mountains. */
-export const WATER_HERO = { src: '/images/about/hero-water.webp', alt: 'MAI WADI 18.9L water can with water splashing by the sea and mountains', width: 1236, height: 514 };
+export const DELIVERY_BANNER_IMAGE = '/images/delivery/delivery-truck.webp'; // worker + truck at the warehouse, 1416×1111 (Delivery section, Home & About)
+/** Inner-page hero can (About, Products, Contact): the 18.9L can cut out of its photo, transparent, 461×900. */
+export const WATER_HERO = { src: '/images/hero/can-cutout.webp', alt: 'MAI WADI 18.9L water can', width: 461, height: 900 };
 export const MISSION_IMAGE = '/images/about/mission-drop.webp'; // MAI WADI water drop (About → Our mission, 716×656)
 export const CAN_IMAGE = '/images/products/water-can.webp'; // official 18.9L can with the Dial Us On numbers, 1024×1535
-export const ABOUT_IMAGE = CAN_IMAGE; // About → "Who we are"
+export const ABOUT_IMAGE = FACTORY_IMAGE; // About → "Who we are" (filling line; the can already fills the About hero)
 export const SUPPLY_IMAGE = FACTORY_IMAGE; // Products → Business supply banner (same filling-line photo)
 
 /** Official contact number; overrides Admin → Settings phone/mobile/WhatsApp everywhere on the site. */

@@ -46,7 +46,7 @@ export default function Products() {
 
   return (
     <>
-      <PageHeader crumb="Products" title="Our products" text="Purified drinking water, ready for delivery to your home or office." image={WATER_HERO} />
+      <PageHeader crumb="Products" title={<>Our <span className="text-ocean">products</span></>} text="Purified drinking water, ready for delivery to your home or office." can={WATER_HERO} />
 
       <section className="container-x pt-8 pb-16 sm:pb-20">
         <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
