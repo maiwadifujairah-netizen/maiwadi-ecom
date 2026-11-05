@@ -9,7 +9,8 @@ import StatusBadge from '../components/StatusBadge';
 import { WhatsAppIcon } from '../components/icons';
 import { ErrorState, Img, Loading, Spinner } from '../components/States';
 import { formatDate, telHref, waHref } from '../utils/format';
-import { ORDER_STATUSES, type Order, type PaymentStatus } from '../types';
+import { CancelOrderDialog, FLOW, step } from '../components/OrderDialogs';
+import type { Order } from '../types';
 
 export default function AdminOrderDetail() {
   const { id } = useParams();
@@ -19,32 +20,47 @@ export default function AdminOrderDetail() {
   const [status, setStatus] = useState('');
   const [note, setNote] = useState('');
   const [busy, setBusy] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
 
   if (loading) return <Loading />;
   if (error || !o) return <ErrorState message={error ?? 'Order not found'} onRetry={reload} />;
 
-  async function patch(body: Record<string, string>) {
+  /** Every action returns the saved order from the database, which replaces what's on screen. */
+  async function send(req: () => Promise<{ data: Order }>, done: string) {
     setBusy(true);
     try {
-      const { data } = await api.patch<Order>(`/orders/${o!._id}`, body);
-      setData({ ...o!, ...data, user: o!.user });
-      toast('Order updated');
+      const { data } = await req();
+      setData({ ...data, user: o!.user });
+      toast(done);
       setNote('');
       setStatus('');
+      return true;
     } catch (e) {
       toast(errorMessage(e), 'error');
+      return false;
     } finally {
       setBusy(false);
     }
   }
-
-  async function updateStatus() {
-    if (!status || status === o!.status) return;
-    if (status === 'Cancelled' && !(await confirm({ title: 'Cancel this order?', message: 'Stock will be returned to inventory. Cancelled orders cannot be reopened.', confirmText: 'Cancel order', danger: true }))) return;
-    patch({ status, note });
-  }
+  const patch = (body: Record<string, string>, done = 'Order updated') => send(() => api.patch<Order>(`/orders/${o!._id}`, body), done);
 
   const a = o.address;
+  // Cash on delivery is collected at the door: it can be marked paid once the order is delivered
+  const codUnpaid = o.paymentMethod === 'cod' && o.paymentStatus === 'pending';
+  const canCollect = codUnpaid && o.status === 'Delivered';
+
+  const next = FLOW.filter((s) => step(s) === step(o.status) + 1); // one step at a time
+  const final = o.status === 'Cancelled' || o.status === 'Delivered';
+
+  async function collectCash() {
+    if (await confirm({ title: 'Cash collected?', message: `Confirm you received ${money(o!.total)} in cash for ${o!.orderNumber}. The order will be marked Paid.`, confirmText: 'Mark as paid' }))
+      send(() => api.post<Order>(`/orders/${o!._id}/collect-cash`), 'Cash collected — payment marked Paid');
+  }
+
+  async function markRefunded() {
+    if (await confirm({ title: 'Mark as refunded?', message: `Record that ${money(o!.total)} was returned to the customer. Stock is not changed.`, confirmText: 'Mark refunded', danger: true }))
+      patch({ paymentStatus: 'refunded', ...(note.trim() && { note }) }, 'Payment marked refunded');
+  }
   const account = typeof o.user === 'object' && o.user ? o.user : null;
 
   return (
@@ -53,8 +69,14 @@ export default function AdminOrderDetail() {
       <div className="mb-6 flex flex-wrap items-center gap-3">
         <h1 className="text-2xl font-bold sm:text-3xl">{o.orderNumber}</h1>
         <StatusBadge status={o.status} />
-        <span className="text-sm text-muted">{formatDate(o.createdAt, true)}</span>
+        <StatusBadge status={o.paymentStatus} />
       </div>
+      <dl className="card mb-6 grid gap-4 p-5 text-sm sm:grid-cols-2 lg:grid-cols-4">
+        <div><dt className="text-muted">Order placed (UAE time)</dt><dd className="mt-1 font-semibold">{formatDate(o.createdAt, true)}</dd></div>
+        <div><dt className="text-muted">Payment method</dt><dd className="mt-1 font-semibold">{o.paymentMethod === 'cod' ? 'Cash on Delivery (COD)' : 'Online (Razorpay)'}</dd></div>
+        <div><dt className="text-muted">Payment status</dt><dd className="mt-1"><StatusBadge status={o.paymentStatus} />{o.paidAt && <span className="block text-xs text-muted">Paid {formatDate(o.paidAt, true)}</span>}</dd></div>
+        <div><dt className="text-muted">Order status</dt><dd className="mt-1"><StatusBadge status={o.status} /></dd></div>
+      </dl>
 
       <div className="grid gap-6 xl:grid-cols-[1fr_360px]">
         <div className="space-y-6">
@@ -98,23 +120,38 @@ export default function AdminOrderDetail() {
         </div>
 
         <div className="space-y-6">
-          <div className="card space-y-4 p-5">
-            <h2 className="font-semibold">Update status</h2>
-            <select className="input" value={status || o.status} onChange={(e) => setStatus(e.target.value)} disabled={o.status === 'Cancelled'}>
-              {ORDER_STATUSES.map((s) => <option key={s}>{s}</option>)}
-            </select>
-            <input className="input" placeholder="Note (optional)" value={note} onChange={(e) => setNote(e.target.value)} disabled={o.status === 'Cancelled'} />
-            <button className="btn-primary w-full" disabled={busy || !status || status === o.status} onClick={updateStatus}>{busy && <Spinner className="size-4" />} Update status</button>
-          </div>
+          {!final && (
+            <div className="card space-y-4 p-5">
+              <h2 className="font-semibold">Update status</h2>
+              <select className="input" value={status} onChange={(e) => setStatus(e.target.value)} aria-label="Next status">
+                <option value="">Move to…</option>
+                {next.map((s) => <option key={s}>{s}</option>)}
+              </select>
+              <input className="input" placeholder="Note (optional)" value={note} onChange={(e) => setNote(e.target.value)} />
+              <button className="btn-primary w-full" disabled={busy || !status} onClick={() => patch({ status, note })}>{busy && <Spinner className="size-4" />} Update status</button>
+              <button className="btn-danger w-full" disabled={busy} onClick={() => setCancelling(true)}>Cancel order</button>
+            </div>
+          )}
+          {o.status === 'Cancelled' && <p className="card bg-red-50 p-5 text-sm text-red-700">This order is cancelled. It can no longer be updated, delivered or paid.</p>}
+          {o.status === 'Delivered' && (
+            <div className="card space-y-3 p-5">
+              <h2 className="font-semibold">Returns &amp; manual review</h2>
+              <p className="text-xs text-muted">Delivered orders can't be cancelled and stock is not restored. Record a return or issue here for review.</p>
+              <textarea className="input" rows={2} placeholder="e.g. Customer returned 1 can — damaged seal" value={note} onChange={(e) => setNote(e.target.value)} maxLength={300} />
+              <button className="btn-outline w-full" disabled={busy || !note.trim()} onClick={() => patch({ note }, 'Note added to history')}>Add note to history</button>
+              {o.paymentStatus === 'paid' && <button className="btn-danger w-full" disabled={busy} onClick={markRefunded}>Mark payment refunded</button>}
+            </div>
+          )}
           <div className="card space-y-3 p-5">
             <h2 className="font-semibold">Payment</h2>
-            <p className="text-sm">{o.paymentMethod === 'cod' ? 'Cash on delivery' : 'Online (Razorpay)'}</p>
-            <select className="input" value={o.paymentStatus} onChange={(e) => patch({ paymentStatus: e.target.value as PaymentStatus })} disabled={busy}>
-              {['pending', 'paid', 'failed', 'refunded'].map((s) => (
-                // online orders become paid only through Razorpay verification
-                <option key={s} value={s} disabled={s === 'paid' && o.paymentMethod === 'razorpay' && !o.razorpayPaymentId}>{s[0].toUpperCase() + s.slice(1)}</option>
-              ))}
-            </select>
+            <p className="text-sm">{o.paymentMethod === 'cod' ? 'Cash on Delivery (COD)' : 'Online (Razorpay)'}</p>
+            {codUnpaid && o.status !== 'Cancelled' && (
+              <>
+                <button className="btn-primary w-full" disabled={busy || !canCollect} onClick={collectCash}>{busy && <Spinner className="size-4" />} Mark cash collected</button>
+                {!canCollect && <p className="text-xs text-muted">Available once the order is marked Delivered.</p>}
+              </>
+            )}
+            <p className="text-sm">Status: <StatusBadge status={o.paymentStatus} /></p>
             {o.paymentMethod === 'razorpay' && (
               <dl className="space-y-1 text-xs">
                 <div><dt className="inline text-muted">Razorpay order: </dt><dd className="inline font-mono break-all">{o.razorpayOrderId || '—'}</dd></div>
@@ -128,15 +165,20 @@ export default function AdminOrderDetail() {
               {[...o.statusHistory].reverse().map((h, i) => (
                 <li key={i} className="relative">
                   <span className="absolute top-1.5 -left-[22px] size-2.5 rounded-full bg-ocean" />
-                  <p className="text-sm font-semibold">{h.status}</p>
+                  <p className="text-sm font-semibold">{h.status === 'Shipped' ? 'Out for Delivery' : h.status}</p>
                   {h.note && <p className="text-sm text-muted">{h.note}</p>}
-                  <p className="text-xs text-muted">{formatDate(h.at, true)}</p>
+                  <p className="text-xs text-muted">{formatDate(h.at, true)}{h.by && ` · by ${h.by}`}</p>
                 </li>
               ))}
             </ol>
           </div>
         </div>
       </div>
+
+      {cancelling && (
+        <CancelOrderDialog order={o} onClose={() => setCancelling(false)} onConflict={() => { setCancelling(false); reload(); }}
+          onSaved={(saved) => { setData({ ...saved, user: o.user }); setCancelling(false); }} />
+      )}
     </>
   );
 }
