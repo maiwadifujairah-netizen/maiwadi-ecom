@@ -6,11 +6,13 @@ export function formatMoney(amount: number, currency = 'AED') {
   }
 }
 
+// Dates are shown in UAE time (Asia/Dubai) whatever the viewer's device timezone, e.g. "04 Nov 2026, 11:45 AM"
+const UAE = { timeZone: 'Asia/Dubai' } as const;
+const TIME = { hour: '2-digit', minute: '2-digit', hour12: true } as const;
+const upperAmPm = (s: string) => s.replace(/\b(am|pm)\b/, (m) => m.toUpperCase());
 export const formatDate = (d: string | Date, withTime = false) =>
-  new Date(d).toLocaleString('en-GB', {
-    day: 'numeric', month: 'short', year: 'numeric',
-    ...(withTime && { hour: '2-digit', minute: '2-digit' }),
-  });
+  upperAmPm(new Date(d).toLocaleString('en-GB', { ...UAE, day: '2-digit', month: 'short', year: 'numeric', ...(withTime && TIME) }));
+export const formatTime = (d: string | Date) => upperAmPm(new Date(d).toLocaleTimeString('en-GB', { ...UAE, ...TIME }));
 
 export const telHref = (n: string) => `tel:${n.replace(/[^\d+]/g, '')}`;
 // wa.me needs an international number; local UAE numbers (05X…) get the 971 prefix.

@@ -9,7 +9,6 @@ import { useUI } from '../context/UIContext';
 import ProductCard, { canBuy } from '../components/ProductCard';
 import QuantitySelector from '../components/QuantitySelector';
 import StockBadge from '../components/StockBadge';
-import ZoomableImage from '../components/ZoomableImage';
 import { WhatsAppIcon } from '../components/icons';
 import { ErrorState, Img, Loading } from '../components/States';
 import { waHref } from '../utils/format';
@@ -43,7 +42,10 @@ export default function ProductDetail() {
 
       <div className="grid gap-10 lg:grid-cols-2 lg:gap-16">
         <div>
-          <ZoomableImage src={images[active]} alt={p.name} eager className="mx-auto sm:max-w-md lg:max-w-[30rem]" />
+          {/* 2:3 frame = the official can photo's own ratio, so object-contain fills it edge to edge without cropping. */}
+          <div className="media-panel mx-auto aspect-[2/3] w-full sm:max-w-md lg:max-w-[30rem]">
+            <Img src={images[active]} alt={p.name} eager product className="product-img" />
+          </div>
           {images.length > 1 && (
             <div className="mt-4 flex gap-3 overflow-x-auto pb-1">
               {images.map((src, i) => (

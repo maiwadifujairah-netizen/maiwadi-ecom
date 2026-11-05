@@ -4,7 +4,10 @@ import { env, razorpayEnabled } from '../config/env.js';
 
 const razorpay = razorpayEnabled ? new Razorpay({ key_id: env.razorpay.keyId!, key_secret: env.razorpay.keySecret! }) : null;
 
-export const paymentMethods = () => (razorpayEnabled ? ['cod', 'razorpay'] : ['cod']);
+// Cash on Delivery is the only checkout method unless ONLINE_PAYMENTS=true AND Razorpay keys are set.
+// Keys alone still let older online orders verify/sync, but customers can't pick online payment.
+export const onlineCheckoutEnabled = () => razorpayEnabled && process.env.ONLINE_PAYMENTS === 'true';
+export const paymentMethods = () => (onlineCheckoutEnabled() ? ['cod', 'razorpay'] : ['cod']);
 export const onlinePaymentEnabled = () => razorpayEnabled;
 
 export interface GatewayPayment { id: string; order_id: string; status: string; amount: number | string; currency: string }

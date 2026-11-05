@@ -74,8 +74,11 @@ const bannerSchema = new Schema(
 export const Banner = model('Banner', bannerSchema);
 
 // ---------- Order ----------
-export const ORDER_STATUSES = ['Pending', 'Confirmed', 'Processing', 'Shipped', 'Delivered', 'Cancelled'] as const;
-export const PAYMENT_STATUSES = ['pending', 'paid', 'failed', 'refunded'] as const;
+export const ORDER_STATUSES = ['Pending', 'Confirmed', 'Processing', 'Out for Delivery', 'Delivered', 'Cancelled'] as const;
+/** 'Shipped' is the old name of 'Out for Delivery': still valid so existing orders load and save, never offered. */
+export const LEGACY_SHIPPED = 'Shipped';
+// pending = unpaid (COD: cash not collected yet); cancelled = order cancelled before payment
+export const PAYMENT_STATUSES = ['pending', 'paid', 'failed', 'refunded', 'cancelled'] as const;
 
 const orderSchema = new Schema(
   {
@@ -113,10 +116,12 @@ const orderSchema = new Schema(
     currency: { type: String, default: 'AED' },
     paymentMethod: { type: String, enum: ['cod', 'razorpay'], required: true },
     paymentStatus: { type: String, enum: PAYMENT_STATUSES, default: 'pending' },
+    paidAt: Date, // when payment was confirmed (COD: when the admin recorded the cash as collected)
     razorpayOrderId: String,
     razorpayPaymentId: String,
-    status: { type: String, enum: ORDER_STATUSES, default: 'Pending', index: true },
-    statusHistory: [{ status: String, note: String, at: { type: Date, default: Date.now }, _id: false }],
+    status: { type: String, enum: [...ORDER_STATUSES, LEGACY_SHIPPED], default: 'Pending', index: true },
+    // Audit trail: `by` is the admin who made the change (empty for customer/system events)
+    statusHistory: [{ status: String, note: String, by: { type: String, default: '' }, at: { type: Date, default: Date.now }, _id: false }],
   },
   opts,
 );

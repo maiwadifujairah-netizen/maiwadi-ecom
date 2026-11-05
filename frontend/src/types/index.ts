@@ -29,9 +29,11 @@ export interface Settings {
 
 export interface User { id: string; name: string; email: string; phone: string; role: 'customer' | 'admin' }
 
-export const ORDER_STATUSES = ['Pending', 'Confirmed', 'Processing', 'Shipped', 'Delivered', 'Cancelled'] as const;
-export type OrderStatus = (typeof ORDER_STATUSES)[number];
-export type PaymentStatus = 'pending' | 'paid' | 'failed' | 'refunded';
+export const ORDER_STATUSES = ['Pending', 'Confirmed', 'Processing', 'Out for Delivery', 'Delivered', 'Cancelled'] as const;
+// 'Shipped' = older orders saved before it was renamed 'Out for Delivery'
+export type OrderStatus = (typeof ORDER_STATUSES)[number] | 'Shipped';
+export const PAYMENT_STATUSES = ['pending', 'paid', 'failed', 'refunded', 'cancelled'] as const;
+export type PaymentStatus = (typeof PAYMENT_STATUSES)[number];
 
 export interface Order {
   _id: string; orderNumber: string; createdAt: string;
@@ -40,8 +42,8 @@ export interface Order {
   address: { line1: string; line2: string; city: string; area: string; state?: string; postalCode?: string; notes: string };
   items: { product: string; name: string; image: string; price: number; quantity: number }[];
   subtotal: number; deliveryFee: number; total: number; currency: string;
-  paymentMethod: 'cod' | 'razorpay'; paymentStatus: PaymentStatus;
-  status: OrderStatus; statusHistory: { status: string; note: string; at: string }[];
+  paymentMethod: 'cod' | 'razorpay'; paymentStatus: PaymentStatus; paidAt?: string;
+  status: OrderStatus; statusHistory: { status: string; note: string; by?: string; at: string }[];
 }
 
 export interface Inquiry { _id: string; name: string; email: string; phone: string; message: string; status: 'new' | 'read' | 'resolved'; createdAt: string }

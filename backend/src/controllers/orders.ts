@@ -1,8 +1,8 @@
 import type { Request, Response } from 'express';
 import crypto from 'node:crypto';
 import { z } from 'zod';
-import { Order, ORDER_STATUSES, PAYMENT_STATUSES, Product, Settings } from '../models/index.js';
-import { createPaymentOrder, gateway, onlinePaymentEnabled, paymentMethods, toMinor, verifyPaymentSignature, type GatewayPayment } from '../services/payment.js';
+import { LEGACY_SHIPPED, Order, ORDER_STATUSES, PAYMENT_STATUSES, Product, Settings } from '../models/index.js';
+import { createPaymentOrder, gateway, onlineCheckoutEnabled, onlinePaymentEnabled, paymentMethods, toMinor, verifyPaymentSignature, type GatewayPayment } from '../services/payment.js';
 import { reserveStock, restoreStock } from '../services/inventory.js';
 import { env } from '../config/env.js';
 import { HttpError, escapeRegex, paging, round2 } from '../utils/http.js';
@@ -30,12 +30,16 @@ const checkoutSchema = z.object({
     .array(z.object({ productId: z.string().min(1), quantity: z.coerce.number().int().min(1).max(500) }))
     .min(1, 'Your cart is empty')
     .max(50),
-  paymentMethod: z.enum(['cod', 'razorpay']),
+  paymentMethod: z.enum(['cod', 'razorpay']).default('cod'),
 });
 
+/** UAE is UTC+4 all year (no DST), so a fixed offset gives the local calendar day. */
+const UAE_OFFSET = '+04:00';
+const UAE_OFFSET_MS = 4 * 60 * 60 * 1000;
+
+// Date part is the UAE calendar day the order was placed (servers run in UTC)
 const orderNumber = () => {
-  const d = new Date();
-  const ymd = `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}${String(d.getDate()).padStart(2, '0')}`;
+  const ymd = new Date(Date.now() + UAE_OFFSET_MS).toISOString().slice(0, 10).replace(/-/g, '');
   return `MW-${ymd}-${crypto.randomBytes(3).toString('hex').toUpperCase()}`;
 };
 
@@ -52,6 +56,7 @@ async function markPaid(order: OrderDoc, paymentId: string) {
     { _id: order._id, paymentStatus: { $ne: 'paid' } },
     {
       paymentStatus: 'paid',
+      paidAt: new Date(),
       razorpayPaymentId: paymentId,
       ...(confirm && { status: 'Confirmed' }),
       $push: { statusHistory: { status: confirm ? 'Confirmed' : order.status, note, at: new Date() } },
@@ -112,13 +117,13 @@ async function resume(order: OrderDoc, method: 'cod' | 'razorpay') {
 
 // Public: payment options available to the checkout page
 export const paymentConfig = (_req: Request, res: Response) => {
-  res.json({ methods: paymentMethods(), razorpayKeyId: onlinePaymentEnabled() ? env.razorpay.keyId : null });
+  res.json({ methods: paymentMethods(), razorpayKeyId: onlineCheckoutEnabled() ? env.razorpay.keyId : null });
 };
 
 // Place an order (guest or signed-in). Prices/stock are always taken from the DB, never the client.
 export const placeOrder = async (req: Request, res: Response) => {
   const data = checkoutSchema.parse(req.body);
-  if (data.paymentMethod === 'razorpay' && !onlinePaymentEnabled()) throw new HttpError(400, 'Online payment is not available');
+  if (data.paymentMethod === 'razorpay' && !onlineCheckoutEnabled()) throw new HttpError(400, 'Online payment is not available. Please choose Cash on Delivery.');
 
   await expireStaleOrders();
   if (data.checkoutId) {
@@ -199,21 +204,30 @@ export const verifyPayment = async (req: Request, res: Response) => {
 
 // Signed-in customer's own order history
 export const myOrders = async (req: Request, res: Response) => {
-  res.json(await Order.find({ user: req.user!._id }).sort({ createdAt: -1 }).lean());
+  // Admin notes/names in the history and internal ids stay admin-only
+  res.json(await Order.find({ user: req.user!._id }).sort({ createdAt: -1 }).select('-statusHistory -checkoutId -razorpayOrderId -razorpayPaymentId').lean());
 };
 
 // ---------- Admin ----------
 export const listOrders = async (req: Request, res: Response) => {
   const { page, limit, skip } = paging(req.query);
   const filter: Record<string, unknown> = {};
-  const { status, paymentStatus, paymentMethod, search } = req.query;
-  if (typeof status === 'string' && (ORDER_STATUSES as readonly string[]).includes(status)) filter.status = status;
+  const { status, paymentStatus, paymentMethod, search, from, to, hideCompleted } = req.query;
+  // View filter only (nothing is archived or deleted): hide finished orders = cancelled, or delivered and settled.
+  // Delivered-but-unpaid COD orders stay visible because the cash still has to be collected.
+  if (hideCompleted === '1') filter.$nor = [{ status: 'Cancelled' }, { status: 'Delivered', paymentStatus: { $in: ['paid', 'refunded'] } }];
+  if (typeof status === 'string' && (ORDER_STATUSES as readonly string[]).includes(status))
+    filter.status = status === 'Out for Delivery' ? { $in: [status, LEGACY_SHIPPED] } : status;
   if (typeof paymentStatus === 'string' && (PAYMENT_STATUSES as readonly string[]).includes(paymentStatus)) filter.paymentStatus = paymentStatus;
   if (paymentMethod === 'cod' || paymentMethod === 'razorpay') filter.paymentMethod = paymentMethod;
   if (typeof search === 'string' && search.trim()) {
     const s = escapeRegex(search.trim());
     filter.$or = ['orderNumber', 'customer.name', 'customer.email', 'customer.phone', 'razorpayOrderId', 'razorpayPaymentId'].map((f) => ({ [f]: { $regex: s, $options: 'i' } }));
   }
+  // Order date range (YYYY-MM-DD, inclusive), as UAE calendar days
+  const day = (v: unknown) => (typeof v === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(v) ? new Date(`${v}T00:00:00${UAE_OFFSET}`) : null);
+  const start = day(from), end = day(to);
+  if (start || end) filter.createdAt = { ...(start && { $gte: start }), ...(end && { $lt: new Date(end.getTime() + 24 * 60 * 60 * 1000) }) };
   const [items, total] = await Promise.all([
     Order.find(filter).sort({ createdAt: -1 }).skip(skip).limit(limit).lean(),
     Order.countDocuments(filter),
@@ -228,24 +242,87 @@ export const getOrder = async (req: Request, res: Response) => {
   res.json(await Order.findById(found._id).populate('user', 'name email phone').lean());
 };
 
+// ---------- Admin order actions ----------
+// Forward-only delivery flow; Cancelled is a separate terminal status (POST /:id/cancel), Delivered is final.
+const FLOW = ['Pending', 'Confirmed', 'Processing', 'Out for Delivery', 'Delivered'] as const;
+const step = (s: string) => FLOW.indexOf((s === LEGACY_SHIPPED ? 'Out for Delivery' : s) as (typeof FLOW)[number]);
+
+async function loadOrder(id: unknown) {
+  const order = await Order.findById(id);
+  if (!order) throw new HttpError(404, 'Order not found');
+  return order;
+}
+
+/**
+ * Applies an update only if the order still has the status/payment status it was validated against, so two
+ * admins acting at once (double click, two tabs) can't both win: the second gets a 409 and nothing changes.
+ */
+async function claim(order: OrderDoc, update: Record<string, unknown>) {
+  const updated = await Order.findOneAndUpdate({ _id: order._id, status: order.status, paymentStatus: order.paymentStatus }, update, { new: true });
+  if (!updated) throw new HttpError(409, 'This order was just updated by someone else. Refresh and try again.');
+  return updated;
+}
+
+// Move along the delivery flow, mark a paid order refunded, or add a note (e.g. a return for manual review)
 export const updateOrder = async (req: Request, res: Response) => {
   const data = z
-    .object({ status: z.enum(ORDER_STATUSES).optional(), paymentStatus: z.enum(PAYMENT_STATUSES).optional(), note: z.string().max(300).optional() })
+    .object({
+      status: z.enum(FLOW).optional(),
+      paymentStatus: z.literal('refunded').optional(), // Paid is set only by cash collection or Razorpay verification
+      note: z.string().trim().max(300).optional().default(''),
+    })
     .parse(req.body);
-  const order = await Order.findById(req.params.id);
-  if (!order) throw new HttpError(404, 'Order not found');
-  if (order.status === 'Cancelled' && data.status && data.status !== 'Cancelled')
-    throw new HttpError(400, 'Cancelled orders cannot be reopened');
-  // Online payments become "paid" only through Razorpay verification; cash orders are marked paid by hand
-  if (data.paymentStatus === 'paid' && order.paymentMethod === 'razorpay' && !order.razorpayPaymentId)
-    throw new HttpError(400, 'Online payments are marked paid automatically once Razorpay confirms them');
-
-  if (data.status && data.status !== order.status) {
-    if (data.status === 'Cancelled') await restoreStock(order.items);
-    order.status = data.status;
-    order.statusHistory.push({ status: data.status, note: data.note ?? '', at: new Date() });
+  const order = await loadOrder(req.params.id);
+  if (!data.status && !data.paymentStatus && !data.note) throw new HttpError(400, 'Nothing to update');
+  if (order.status === 'Cancelled' && (data.status || data.paymentStatus)) throw new HttpError(400, 'Cancelled orders cannot be changed');
+  // One step at a time, forward only: no skipping, going back, repeating, or leaving Delivered
+  if (data.status && step(data.status) !== step(order.status) + 1) {
+    const now = order.status === LEGACY_SHIPPED ? 'Out for Delivery' : order.status;
+    throw new HttpError(400, `An order that is ${now} cannot be moved to ${data.status}${FLOW[step(order.status) + 1] ? ` (next step: ${FLOW[step(order.status) + 1]})` : ''}`);
   }
-  if (data.paymentStatus) order.paymentStatus = data.paymentStatus;
-  await order.save();
-  res.json(order);
+  if (data.paymentStatus && order.paymentStatus !== 'paid') throw new HttpError(400, 'Only paid orders can be marked refunded');
+
+  const by = req.user!.name, at = new Date();
+  const history: { status: string; note: string; by: string; at: Date }[] = [];
+  if (data.status) history.push({ status: data.status, note: data.note, by, at });
+  if (data.paymentStatus) history.push({ status: data.status ?? order.status, note: data.note || 'Payment refunded', by, at });
+  if (!history.length) history.push({ status: order.status, note: data.note, by, at });
+  res.json(await claim(order, {
+    ...(data.status && { status: data.status }),
+    ...(data.paymentStatus && { paymentStatus: data.paymentStatus }),
+    $push: { statusHistory: { $each: history } },
+  }));
+};
+
+// Cancel with a reason. Stock goes back exactly once: only the request that wins the atomic claim restores it.
+export const cancelOrder = async (req: Request, res: Response) => {
+  const { reason } = z.object({ reason: z.string().trim().min(3, 'Enter a cancellation reason').max(300) }).parse(req.body);
+  const order = await loadOrder(req.params.id);
+  if (order.status === 'Cancelled') throw new HttpError(409, 'This order is already cancelled');
+  if (order.status === 'Delivered')
+    throw new HttpError(400, 'Delivered orders cannot be cancelled. Add a note for a return / manual review, and mark it refunded if money was returned.');
+  const wasOut = step(order.status) === step('Out for Delivery');
+  const cancelled = await claim(order, {
+    status: 'Cancelled',
+    ...(order.paymentStatus === 'pending' && { paymentStatus: 'cancelled' }), // nothing left to collect
+    $push: { statusHistory: { status: 'Cancelled', note: wasOut ? `Cancelled while out for delivery: ${reason}` : reason, by: req.user!.name, at: new Date() } },
+  });
+  // ponytail: claim + restore are two writes; a crash between them loses the restock. Wrap both in a transaction if that ever matters.
+  await restoreStock(order.items); // never delivered, so the goods are back in stock
+  res.json(cancelled);
+};
+
+// COD: record the cash as collected. Only for delivered, unpaid cash orders; a second click gets a 409.
+export const collectCash = async (req: Request, res: Response) => {
+  const order = await loadOrder(req.params.id);
+  if (order.paymentMethod !== 'cod') throw new HttpError(400, 'Only cash on delivery orders are collected by hand');
+  if (order.paymentStatus === 'paid') throw new HttpError(409, 'Cash for this order was already collected');
+  if (order.status !== 'Delivered') throw new HttpError(400, 'Mark the order as Delivered before recording the cash as collected');
+  if (order.paymentStatus !== 'pending') throw new HttpError(400, `Payment is ${order.paymentStatus}; it cannot be marked paid`);
+  const at = new Date();
+  res.json(await claim(order, {
+    paymentStatus: 'paid',
+    paidAt: at,
+    $push: { statusHistory: { status: order.status, note: 'Cash collected — payment marked Paid', by: req.user!.name, at } },
+  }));
 };

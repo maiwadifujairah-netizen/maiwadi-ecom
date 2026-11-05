@@ -44,6 +44,9 @@ export default function Account() {
                     <p className="font-display text-lg font-bold text-deep">{money(o.total)}</p>
                   </div>
                   <p className="mt-3 text-sm text-muted">{o.items.map((i) => `${i.name} × ${i.quantity}`).join(', ')}</p>
+                  <p className="mt-2 flex flex-wrap items-center gap-2 text-xs text-muted">
+                    Payment: {o.paymentMethod === 'cod' ? 'Cash on Delivery' : 'Online'} <StatusBadge status={o.paymentStatus} />
+                  </p>
                 </li>
               ))}
             </ul>
