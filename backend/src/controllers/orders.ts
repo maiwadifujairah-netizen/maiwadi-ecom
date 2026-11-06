@@ -263,12 +263,13 @@ async function claim(order: OrderDoc, update: Record<string, unknown>) {
   return updated;
 }
 
-// Move along the delivery flow, mark a paid order refunded, or add a note (e.g. a return for manual review)
+// Move along the delivery flow, mark a paid order refunded / an unpaid COD order failed, or add a note (e.g. a return for manual review)
 export const updateOrder = async (req: Request, res: Response) => {
   const data = z
     .object({
       status: z.enum(FLOW).optional(),
-      paymentStatus: z.literal('refunded').optional(), // Paid is set only by cash collection or Razorpay verification
+      // Paid is set only by cash collection (POST /:id/collect-cash) or Razorpay verification, never by hand here
+      paymentStatus: z.enum(['refunded', 'failed']).optional(),
       note: z.string().trim().max(300).optional().default(''),
     })
     .parse(req.body);
@@ -280,12 +281,15 @@ export const updateOrder = async (req: Request, res: Response) => {
     const now = order.status === LEGACY_SHIPPED ? 'Out for Delivery' : order.status;
     throw new HttpError(400, `An order that is ${now} cannot be moved to ${data.status}${FLOW[step(order.status) + 1] ? ` (next step: ${FLOW[step(order.status) + 1]})` : ''}`);
   }
-  if (data.paymentStatus && order.paymentStatus !== 'paid') throw new HttpError(400, 'Only paid orders can be marked refunded');
+  if (data.paymentStatus === 'refunded' && order.paymentStatus !== 'paid') throw new HttpError(400, 'Only paid orders can be marked refunded');
+  // Razorpay failures come from the gateway; by hand only an unpaid cash order can fail (e.g. customer refused to pay)
+  if (data.paymentStatus === 'failed' && (order.paymentMethod !== 'cod' || order.paymentStatus !== 'pending'))
+    throw new HttpError(400, 'Only unpaid cash on delivery orders can be marked failed');
 
   const by = req.user!.name, at = new Date();
   const history: { status: string; note: string; by: string; at: Date }[] = [];
   if (data.status) history.push({ status: data.status, note: data.note, by, at });
-  if (data.paymentStatus) history.push({ status: data.status ?? order.status, note: data.note || 'Payment refunded', by, at });
+  if (data.paymentStatus) history.push({ status: data.status ?? order.status, note: data.note || `Payment marked ${data.paymentStatus}`, by, at });
   if (!history.length) history.push({ status: order.status, note: data.note, by, at });
   res.json(await claim(order, {
     ...(data.status && { status: data.status }),
@@ -318,7 +322,7 @@ export const collectCash = async (req: Request, res: Response) => {
   if (order.paymentMethod !== 'cod') throw new HttpError(400, 'Only cash on delivery orders are collected by hand');
   if (order.paymentStatus === 'paid') throw new HttpError(409, 'Cash for this order was already collected');
   if (order.status !== 'Delivered') throw new HttpError(400, 'Mark the order as Delivered before recording the cash as collected');
-  if (order.paymentStatus !== 'pending') throw new HttpError(400, `Payment is ${order.paymentStatus}; it cannot be marked paid`);
+  if (!['pending', 'failed'].includes(order.paymentStatus)) throw new HttpError(400, `Payment is ${order.paymentStatus}; it cannot be marked paid`);
   const at = new Date();
   res.json(await claim(order, {
     paymentStatus: 'paid',

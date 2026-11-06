@@ -10,9 +10,11 @@ import { AdminHeader, td as baseTd, th as baseTh } from '../components/AdminUI';
 const td = baseTd.replace('px-4', 'px-3');
 const th = baseTh.replace('px-4', 'px-3');
 import Pagination from '../components/Pagination';
-import StatusBadge, { COLORS } from '../components/StatusBadge';
+import { COLORS } from '../components/StatusBadge';
 import { CancelOrderDialog, FLOW, StatusChangeDialog, nextStatus } from '../components/OrderDialogs';
-import { EmptyState, ErrorState, Loading } from '../components/States';
+import { EmptyState, ErrorState, Loading, Spinner } from '../components/States';
+import { useUI } from '../context/UIContext';
+import { api, errorMessage } from '../services/api';
 import { formatDate, formatTime } from '../utils/format';
 import { ORDER_STATUSES, PAYMENT_STATUSES, type Order, type Paged } from '../types';
 
@@ -40,6 +42,57 @@ function StatusSelect({ order, onPick }: { order: Order; onPick: (next: string) 
         )}
       </select>
       {next && <ChevronDown aria-hidden="true" className="pointer-events-none absolute top-1/2 right-2 size-3.5 -translate-y-1/2" />}
+    </label>
+  );
+}
+
+/**
+ * Payment Status cell. Options mirror what the backend allows, so nothing is offered that would be rejected:
+ * Paid = COD cash collected after delivery (collect-cash endpoint); Failed = unpaid COD; Refunded = already paid.
+ * Razorpay payments are never set to Paid by hand, and nothing here touches the order status or the gateway.
+ */
+function PaymentSelect({ order, onSaved }: { order: Order; onSaved: () => void }) {
+  const { toast, confirm } = useUI();
+  const { money } = useSite();
+  const [busy, setBusy] = useState(false);
+  const cur = order.paymentStatus, cod = order.paymentMethod === 'cod', open = order.status !== 'Cancelled';
+  const allowed: Record<string, boolean> = {
+    paid: cod && (cur === 'pending' || cur === 'failed') && order.status === 'Delivered',
+    failed: cod && cur === 'pending' && open,
+    refunded: cur === 'paid' && open,
+  };
+  const editable = Object.values(allowed).some(Boolean);
+  const options = cur === 'cancelled' ? ['cancelled'] : PAYMENT_STATUSES.filter((s) => s !== 'cancelled');
+  const hint = cod ? (cur === 'pending' && order.status !== 'Delivered' ? 'Mark the order Delivered before recording cash as collected' : '') : 'Online payments are updated by Razorpay';
+
+  async function pick(next: string) {
+    const msg = {
+      paid: [`Cash collected for ${order.orderNumber}?`, `Confirm you received ${money(order.total)} in cash. Payment will be marked Paid.`, 'Mark as paid'],
+      failed: [`Mark payment failed for ${order.orderNumber}?`, 'Use this when the customer could not or would not pay. The order status is not changed.', 'Mark failed'],
+      refunded: [`Mark ${order.orderNumber} refunded?`, `Record that ${money(order.total)} was returned to the customer. No refund is sent through Razorpay and stock is not changed.`, 'Mark refunded'],
+    }[next]!;
+    if (!(await confirm({ title: msg[0], message: msg[1], confirmText: msg[2], danger: next !== 'paid' }))) return;
+    setBusy(true);
+    try {
+      await (next === 'paid' ? api.post(`/orders/${order._id}/collect-cash`) : api.patch(`/orders/${order._id}`, { paymentStatus: next }));
+      toast(`Payment marked ${label(next)}`);
+    } catch (e) {
+      toast(errorMessage(e), 'error');
+    } finally {
+      setBusy(false);
+      onSaved(); // success or rejection: reload so the row matches the database
+    }
+  }
+
+  return (
+    <label className="relative inline-flex items-center gap-1.5" title={!editable ? hint : undefined}>
+      <span className="sr-only">Payment status of {order.orderNumber}</span>
+      <select value={cur} disabled={!editable || busy} onChange={(e) => e.target.value !== cur && pick(e.target.value)}
+        className={`appearance-none rounded-full py-1 pl-2.5 text-xs font-semibold ring-1 ring-current/15 focus:ring-2 focus:ring-ocean focus:outline-none disabled:opacity-100 ${COLORS[cur] ?? ''} ${editable ? 'cursor-pointer pr-7 hover:ring-current/40' : 'cursor-default pr-2.5'}`}>
+        {options.map((s) => <option key={s} value={s} disabled={s !== cur && !allowed[s]}>{label(s)}</option>)}
+      </select>
+      {editable && !busy && <ChevronDown aria-hidden="true" className="pointer-events-none absolute top-1/2 right-2 size-3.5 -translate-y-1/2" />}
+      {busy && <Spinner className="size-3.5" />}
     </label>
   );
 }
@@ -140,7 +193,7 @@ export default function AdminOrders() {
                       <td className={`${td} whitespace-nowrap text-muted`}>{formatTime(o.createdAt)}</td>
                       <td className={`${td} font-semibold whitespace-nowrap`}>{money(o.total)}</td>
                       <td className={`${td} whitespace-nowrap`}>{o.paymentMethod === 'cod' ? 'COD' : 'Online'}</td>
-                      <td className={`${td} whitespace-nowrap`}><StatusBadge status={o.paymentStatus} /></td>
+                      <td className={`${td} whitespace-nowrap`}><PaymentSelect order={o} onSaved={reload} /></td>
                       <td className={`${td} whitespace-nowrap`}><StatusSelect order={o} onPick={(status) => setAction({ order: o, status })} /></td>
                     </tr>
                   ))}

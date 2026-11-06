@@ -147,6 +147,8 @@ test('checkout: idempotency, Razorpay verification, retries, COD, expiry, admin'
   assert.equal((await verify({ razorpay_order_id: razorpayOrderId, razorpay_payment_id: 'pay_low', razorpay_signature: sign(razorpayOrderId, 'pay_low') })).status, 402);
   // admin cannot hand-mark an unverified online payment as paid
   assert.equal((await call(`/orders/${id}`, { method: 'PATCH', cookie, body: { paymentStatus: 'paid' } })).status, 400);
+  assert.equal((await call(`/orders/${id}`, { method: 'PATCH', cookie, body: { paymentStatus: 'failed' } })).status, 400); // gateway decides
+  assert.equal((await call(`/orders/${id}`, { method: 'PATCH', body: { paymentStatus: 'failed' } })).status, 401);
   assert.equal((await call(`/orders/${id}`, { cookie })).body.paymentStatus, 'pending');
 
   // genuine payment (authorized -> captured by the server); duplicate callback is harmless
@@ -331,6 +333,15 @@ test('COD workflow: checkout validation, order record, admin lifecycle, filters'
   assert.ok([u1.status, u2.status].includes(200) && [u1.status, u2.status].some((x) => x === 409 || x === 400));
   const qd = (await call(`/orders/${q._id}`, { cookie })).body;
   assert.deepEqual([qd.status, qd.paymentStatus, qd.statusHistory.filter((h: { status: string }) => h.status === 'Confirmed').length], ['Confirmed', 'pending', 1]);
+  // payment dropdown: unpaid COD -> Failed (order status untouched, audited); not twice, not refundable, not on paid orders
+  assert.equal((await patch({ paymentStatus: 'failed' }, o._id)).status, 400); // o is refunded
+  const codFailed = await patch({ paymentStatus: 'failed' }, q._id);
+  assert.deepEqual([codFailed.body.status, codFailed.body.paymentStatus], ['Confirmed', 'failed']);
+  assert.ok(codFailed.body.statusHistory.at(-1).by);
+  assert.equal((await patch({ paymentStatus: 'failed' }, q._id)).status, 400);
+  assert.equal((await patch({ paymentStatus: 'refunded' }, q._id)).status, 400);
+  assert.equal((await patch({ paymentStatus: 'pending' }, q._id)).status, 400); // not a settable value
+  assert.equal((await act(q._id, 'collect-cash')).status, 400); // still not delivered
   await act(q._id, 'cancel', { reason: 'Test cleanup' });
 
   // "Hide completed orders": cancelled and delivered+settled orders are hidden from the view, never deleted;
