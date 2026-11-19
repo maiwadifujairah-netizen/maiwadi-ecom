@@ -6,7 +6,6 @@ interface AuthValue {
   user: User | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<User>;
-  loginWithGoogle: (credential: string) => Promise<User>;
   register: (data: { name: string; email: string; phone: string; password: string }) => Promise<User>;
   logout: () => Promise<void>;
 }
@@ -27,7 +26,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // cookie not sent), so drop the user and let AdminLayout redirect to /login. Login's own 401 is a form error.
   useEffect(() => {
     const id = api.interceptors.response.use(undefined, (err) => {
-      if (err.response?.status === 401 && !['/auth/login', '/auth/google'].includes(err.config?.url)) setUser(null);
+      if (err.response?.status === 401 && err.config?.url !== '/auth/login') setUser(null);
       return Promise.reject(err);
     });
     return () => api.interceptors.response.eject(id);
@@ -35,12 +34,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = useCallback(async (email: string, password: string) => {
     const { data } = await api.post<{ user: User }>('/auth/login', { email, password });
-    setUser(data.user);
-    return data.user;
-  }, []);
-
-  const loginWithGoogle = useCallback(async (credential: string) => {
-    const { data } = await api.post<{ user: User }>('/auth/google', { credential });
     setUser(data.user);
     return data.user;
   }, []);
@@ -56,7 +49,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
   }, []);
 
-  return <AuthContext.Provider value={{ user, loading, login, loginWithGoogle, register, logout }}>{children}</AuthContext.Provider>;
+  return <AuthContext.Provider value={{ user, loading, login, register, logout }}>{children}</AuthContext.Provider>;
 }
 
 export const useAuth = () => useContext(AuthContext)!;

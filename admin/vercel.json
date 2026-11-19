@@ -15,7 +15,7 @@
       "destination": "https://maiwadi-ecom.onrender.com/static/:path*"
     },
     {
-      "source": "/((?!api/|uploads/|static/).*)",
+      "source": "/((?!api/|uploads/|static/|assets/).*)",
       "destination": "/index.html"
     }
   ],
