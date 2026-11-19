@@ -56,7 +56,7 @@ if (e.MONGODB_URI) {
       const admin = await db.collection('users').findOne({ email: e.ADMIN_EMAIL.toLowerCase() });
       if (!admin) skip(`Admin ${e.ADMIN_EMAIL}`, 'not found — `npm run seed` creates it');
       else if (admin.role !== 'admin') fail(`Admin ${e.ADMIN_EMAIL}`, 'exists but is not an admin');
-      else (await bcrypt.compare(e.ADMIN_PASSWORD, admin.password) ? pass : fail)(`ADMIN_PASSWORD matches ${e.ADMIN_EMAIL}`, admin.status === 'active' ? '' : `account status: ${admin.status}`);
+      else (await bcrypt.compare(e.ADMIN_PASSWORD, admin.password ?? '') ? pass : fail)(`ADMIN_PASSWORD matches ${e.ADMIN_EMAIL}`, admin.status === 'active' ? '' : `account status: ${admin.status}`);
     }
   } catch (err) {
     fail('MongoDB connection', scrub(err) + ' (check Atlas → Network Access allows this IP, and the user/password)');

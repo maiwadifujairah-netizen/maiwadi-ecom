@@ -5,7 +5,7 @@ import { MongoMemoryServer } from 'mongodb-memory-server';
 
 const mongo = await MongoMemoryServer.create();
 // Fake Razorpay keys: the gateway is stubbed below, so nothing reaches Razorpay
-Object.assign(process.env, { MONGODB_URI: mongo.getUri(), JWT_SECRET: 'test-secret', ADMIN_EMAIL: 'admin@test.com', ADMIN_PASSWORD: 'supersecret1', NODE_ENV: 'test', RAZORPAY_KEY_ID: 'rzp_test_fake', RAZORPAY_KEY_SECRET: 'fake_secret' });
+Object.assign(process.env, { MONGODB_URI: mongo.getUri(), JWT_SECRET: 'test-secret', ADMIN_EMAIL: 'admin@test.com', ADMIN_PASSWORD: 'supersecret1', NODE_ENV: 'test', RAZORPAY_KEY_ID: 'rzp_test_fake', RAZORPAY_KEY_SECRET: 'fake_secret', GOOGLE_CLIENT_ID: 'test-client.apps.googleusercontent.com' });
 const { connectDB } = await import('./config/db.js');
 const { seed } = await import('./seed.js');
 const { createApp } = await import('./app.js');
@@ -20,10 +20,10 @@ const server = createApp().listen(0);
 const base = `http://localhost:${(server.address() as { port: number }).port}/api`;
 after(async () => { server.close(); await mongoose.disconnect(); await mongo.stop(); });
 
-async function call(path: string, opts: { method?: string; body?: unknown; cookie?: string } = {}) {
+async function call(path: string, opts: { method?: string; body?: unknown; cookie?: string; admin?: boolean } = {}) {
   const res = await fetch(base + path, {
     method: opts.method ?? 'GET',
-    headers: { 'content-type': 'application/json', ...(opts.cookie && { cookie: opts.cookie }) },
+    headers: { 'content-type': 'application/json', ...(opts.cookie && { cookie: opts.cookie }), ...(opts.admin && { 'x-app': 'admin' }) },
     body: opts.body ? JSON.stringify(opts.body) : undefined,
   });
   return { status: res.status, body: await res.json(), cookie: res.headers.get('set-cookie')?.split(';')[0] };
@@ -369,4 +369,48 @@ test('COD workflow: checkout validation, order record, admin lifecycle, filters'
   // older orders saved as 'Shipped' still show under Out for Delivery
   await Order.collection.updateOne({ _id: new mongoose.Types.ObjectId(c._id) }, { $set: { status: 'Shipped' } });
   assert.ok((await list('status=Out for Delivery&limit=50')).items.some((x: { _id: string }) => x._id === c._id));
+});
+
+// ---------- Google Sign-In: Google's verifier stubbed; tokens are keys into this table ----------
+test('google sign-in: register, login, linking, admin-only rules', async () => {
+  const { google } = await import('./controllers/auth.js');
+  const { User } = await import('./models/index.js');
+  const tokens: Record<string, object> = {
+    newbie: { sub: 'g-new', email: 'New.User@gmail.com', email_verified: true, name: 'New User' },
+    unverified: { sub: 'g-unv', email: 'x@gmail.com', email_verified: false },
+    custNoHd: { sub: 'g-cust', email: 'c@test.com', email_verified: true },
+    custHd: { sub: 'g-cust', email: 'c@test.com', email_verified: true, hd: 'test.com' },
+    custOther: { sub: 'g-other', email: 'c@test.com', email_verified: true, hd: 'test.com' },
+    admin: { sub: 'g-admin', email: 'admin@test.com', email_verified: true, hd: 'test.com' },
+    stranger: { sub: 'g-stranger', email: 'stranger@gmail.com', email_verified: true },
+  };
+  google.verify = async (t) => { if (!tokens[t]) throw new Error('bad token'); return tokens[t]; };
+  const g = (credential: string, admin = false, extra = {}) => call('/auth/google', { method: 'POST', admin, body: { credential, ...extra } });
+
+  assert.equal((await g('forged-or-expired')).status, 401);
+  assert.equal((await g('unverified')).status, 401);
+
+  // new customer: role from the server, never the request; session works via /auth/me
+  const reg = await g('newbie', false, { role: 'admin' });
+  assert.deepEqual([reg.status, reg.body.user.role, reg.body.user.email], [201, 'customer', 'new.user@gmail.com']);
+  assert.equal((await call('/auth/me', { cookie: reg.cookie })).body.user.id, reg.body.user.id);
+  const again = await g('newbie');
+  assert.deepEqual([again.status, again.body.user.id], [200, reg.body.user.id]); // no duplicate
+
+  // existing password customer: non-authoritative email can't link; Workspace (hd) email links; password still works
+  assert.equal((await g('custNoHd')).status, 409);
+  const linked = await g('custHd');
+  assert.equal(linked.status, 200);
+  assert.equal((await call('/auth/login', { method: 'POST', body: { email: 'c@test.com', password: 'password123' } })).status, 200);
+  assert.equal((await g('custOther')).status, 409); // a second Google account can't claim the same user
+
+  // admin app: customers and unknown Google accounts are refused, nothing is created
+  const users = await User.countDocuments();
+  assert.equal((await g('newbie', true)).status, 403);
+  assert.equal((await g('stranger', true)).status, 403);
+  assert.equal(await User.countDocuments(), users);
+  const adm = await g('admin', true);
+  assert.deepEqual([adm.status, adm.body.user.role, adm.cookie?.split('=')[0]], [200, 'admin', 'mw_admin_token']);
+  assert.equal((await call('/admin/dashboard', { cookie: adm.cookie, admin: true })).status, 200);
+  assert.equal((await User.findOne({ email: 'admin@test.com' }).select('+password'))?.password?.startsWith('$2'), true); // hash untouched
 });

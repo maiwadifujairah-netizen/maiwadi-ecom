@@ -17,6 +17,8 @@ export const env = {
   clientUrls: (process.env.CLIENT_URL || 'http://localhost:5173,http://localhost:5174').split(',').map((s) => s.trim().replace(/\/+$/, '')).filter(Boolean),
   // 'lax' when apps reach the API same-site (dev on localhost, or via a /api rewrite); 'none' for cross-site API calls
   cookieSameSite: (process.env.COOKIE_SAMESITE === 'none' ? 'none' : 'lax') as 'lax' | 'none',
+  // Google Web OAuth client ID (same one the website + admin use). Unset = Google sign-in disabled.
+  googleClientId: process.env.GOOGLE_CLIENT_ID?.trim() || '',
   cloudinary: {
     cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
     api_key: process.env.CLOUDINARY_API_KEY,

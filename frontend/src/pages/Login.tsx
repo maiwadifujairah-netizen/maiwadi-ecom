@@ -5,16 +5,18 @@ import { useAuth } from '../context/AuthContext';
 import { errorMessage } from '../services/api';
 import Logo from '../components/Logo';
 import { Spinner } from '../components/States';
+import GoogleButton, { googleEnabled } from '../components/GoogleButton';
 
 export default function Login({ mode = 'login' }: { mode?: 'login' | 'register' }) {
   const isRegister = mode === 'register';
   useMeta(isRegister ? 'Create account' : 'Sign in');
-  const { user, login, register } = useAuth();
+  const { user, login, loginWithGoogle, register } = useAuth();
   const navigate = useNavigate();
   const next = useSearchParams()[0].get('next') || '/account';
   const [form, setForm] = useState({ name: '', email: '', phone: '', password: '' });
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
+  const [googleBusy, setGoogleBusy] = useState(false);
 
   if (user) return <Navigate to={next} replace />;
 
@@ -34,6 +36,19 @@ export default function Login({ mode = 'login' }: { mode?: 'login' | 'register' 
     }
   }
 
+  // Same customer session as the password form; a new Google account registers, an existing one signs in
+  async function google(credential: string) {
+    setGoogleBusy(true);
+    setError('');
+    try {
+      await loginWithGoogle(credential);
+      navigate(next, { replace: true });
+    } catch (err) {
+      setError(errorMessage(err, 'Google sign-in failed. Please try again.'));
+      setGoogleBusy(false);
+    }
+  }
+
   return (
     <div className="container-x flex justify-center py-14">
       <div className="card w-full max-w-md p-8">
@@ -50,8 +65,14 @@ export default function Login({ mode = 'login' }: { mode?: 'login' | 'register' 
           )}
           <div><label htmlFor="password" className="label">Password</label><input id="password" type="password" required minLength={isRegister ? 8 : 1} className="input" value={form.password} onChange={set('password')} autoComplete={isRegister ? 'new-password' : 'current-password'} /></div>
           {error && <p className="rounded-xl bg-red-50 p-3 text-sm text-red-700" role="alert">{error}</p>}
-          <button className="btn-primary w-full" disabled={busy}>{busy && <Spinner className="size-4" />} {isRegister ? 'Create account' : 'Sign in'}</button>
+          <button className="btn-primary w-full" disabled={busy || googleBusy}>{busy && <Spinner className="size-4" />} {isRegister ? 'Create account' : 'Sign in'}</button>
         </form>
+        {googleEnabled && <>
+        <div className="my-5 flex items-center gap-3 text-xs uppercase tracking-wide text-muted"><span className="h-px flex-1 bg-slate-200" />or<span className="h-px flex-1 bg-slate-200" /></div>
+        {googleBusy
+          ? <p className="flex min-h-11 items-center justify-center gap-2 text-sm text-muted" role="status"><Spinner className="size-4" /> Signing you in with Google…</p>
+          : <GoogleButton text={isRegister ? 'signup_with' : 'continue_with'} onCredential={google} />}
+        </>}
         <p className="mt-6 text-center text-sm text-muted">
           {isRegister ? <>Already have an account? <Link to={`/login?next=${encodeURIComponent(next)}`} className="font-semibold text-ocean">Sign in</Link></>
             : <>New here? <Link to={`/register?next=${encodeURIComponent(next)}`} className="font-semibold text-ocean">Create an account</Link></>}

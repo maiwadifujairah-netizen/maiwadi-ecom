@@ -8,7 +8,10 @@ const userSchema = new Schema(
     name: { type: String, required: true, trim: true },
     email: { type: String, required: true, unique: true, lowercase: true, trim: true },
     phone: { type: String, trim: true, default: '' },
-    password: { type: String, required: true, select: false },
+    // Absent for accounts created through Google Sign-In (they can't use the password form)
+    password: { type: String, select: false },
+    // Google account `sub`; unique when set, so one Google identity maps to exactly one user
+    googleId: { type: String, unique: true, sparse: true, select: false },
     role: { type: String, enum: ['customer', 'admin'], default: 'customer', index: true },
     status: { type: String, enum: ['active', 'blocked'], default: 'active' },
   },

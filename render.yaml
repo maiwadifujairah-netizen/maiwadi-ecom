@@ -28,6 +28,9 @@ services:
         sync: false
       - key: COOKIE_SAMESITE
         value: lax
+      # Google Sign-In Web OAuth client ID (same as VITE_GOOGLE_CLIENT_ID on both Vercel projects)
+      - key: GOOGLE_CLIENT_ID
+        sync: false
       - key: CLOUDINARY_CLOUD_NAME
         sync: false
       - key: CLOUDINARY_API_KEY

@@ -21,7 +21,7 @@ if (ADMIN_EMAIL) {
   const admin = await User.findOne({ email: ADMIN_EMAIL.toLowerCase() }).select('+password role status').lean();
   if (!admin) console.warn('[ADMIN CONFIG] No account with this email in the database — run `npm run seed` to create it');
   else if (admin.role !== 'admin') console.warn('[ADMIN CONFIG] Account exists but is not an admin');
-  else if (ADMIN_PASSWORD && !(await bcrypt.compare(ADMIN_PASSWORD, admin.password)))
+  else if (ADMIN_PASSWORD && !(await bcrypt.compare(ADMIN_PASSWORD, admin.password ?? '')))
     console.warn('[ADMIN CONFIG] ADMIN_PASSWORD in backend/.env does NOT match the stored admin password — sign in with the original password, or run `npm run admin:reset-password -- --yes`');
   else console.log(`[ADMIN CONFIG] Admin account found (status: ${admin.status})${ADMIN_PASSWORD ? ', ADMIN_PASSWORD matches' : ''}`);
 }

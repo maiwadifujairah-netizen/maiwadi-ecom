@@ -5,9 +5,10 @@ import { useAuth } from '../context/AuthContext';
 import { errorMessage, SITE_URL } from '../services/api';
 import Logo from '../components/Logo';
 import { Spinner } from '../components/States';
+import GoogleButton, { googleEnabled } from '../components/GoogleButton';
 
 export default function AdminLogin() {
-  const { user, login, logout } = useAuth();
+  const { user, login, loginWithGoogle, logout } = useAuth();
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -16,12 +17,13 @@ export default function AdminLogin() {
 
   if (user?.role === 'admin') return <Navigate to="/" replace />;
 
-  async function submit(e: FormEvent) {
-    e.preventDefault();
+  // `credential` set = Google; the server only signs in existing admins via Google, the role check below is a second guard
+  async function submit(e?: FormEvent, credential?: string) {
+    e?.preventDefault();
     setBusy(true);
     setError('');
     try {
-      const u = await login(email, password);
+      const u = await (credential ? loginWithGoogle(credential) : login(email, password));
       if (u.role !== 'admin') {
         await logout();
         throw new Error('This account does not have admin access.');
@@ -45,6 +47,11 @@ export default function AdminLogin() {
           {error && <p className="rounded-xl bg-red-50 p-3 text-sm text-red-700" role="alert">{error}</p>}
           <button className="btn-primary w-full" disabled={busy}>{busy ? <Spinner className="size-4" /> : <Lock className="size-4" />} Sign in</button>
         </form>
+        {googleEnabled && <>
+        <div className="my-5 flex items-center gap-3 text-xs uppercase tracking-wide text-muted"><span className="h-px flex-1 bg-slate-200" />or<span className="h-px flex-1 bg-slate-200" /></div>
+        {busy ? <p className="flex min-h-11 items-center justify-center gap-2 text-sm text-muted" role="status"><Spinner className="size-4" /> Signing in…</p>
+          : <GoogleButton text="continue_with" onCredential={(c) => submit(undefined, c)} />}
+        </>}
         <a href={SITE_URL} className="mt-6 block text-center text-sm text-muted hover:text-ocean">← Back to website</a>
       </div>
     </div>
